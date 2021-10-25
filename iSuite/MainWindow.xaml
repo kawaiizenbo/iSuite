@@ -5,8 +5,73 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:iSuite"
         mc:Ignorable="d"
-        Title="iSuite" Height="500" Width="800" ResizeMode="CanMinimize">
+        Title="iSuite" Height="700" Width="1000" ResizeMode="CanMinimize" Loaded="Window_Loaded">
     <Grid>
-
+        <Label x:Name="waitingForDeviceLabel" Content="Could not find a device..." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="36"/>
+        <Label x:Name="ensureTrustedLabel" Content="Please ensure device is connected and trusted, then click refresh." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="18"/>
+        <Button x:Name="refreshDevicesButton" Content="Refresh" HorizontalAlignment="Left" Margin="9999,0,0,9999" VerticalAlignment="Bottom" Width="50" Height="20" Click="refreshDevicesButton_Click"/>
+        <Button x:Name="continueWithoutDeviceButton" Content="Continue Without Device" HorizontalAlignment="Left" Margin="9999,0,0,9999" VerticalAlignment="Bottom" Width="150" Height="20" Click="continueWithoutDeviceButton_Click"/>
+        <TabControl x:Name="mainTabControl">
+            <TabItem x:Name="deviceInfoTab" Header="Device Info" Width="120">
+                <Grid Background="#FFE5E5E5">
+                    <GroupBox x:Name="deviceInfoGroupBox" Header="Loading...">
+                        <Grid>
+                            <GroupBox x:Name="deviceStorageGroupBox" Header="Device Storage (0B Total)" Margin="10,0,10,10" Height="100" VerticalAlignment="Bottom">
+                                <Grid>
+                                    <Label x:Name="systemStorageLabel" Content="System (0B Total)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"/>
+                                    <Label x:Name="systemStorageFreeLabel" Content="0B Free" HorizontalAlignment="Left" Margin="10,51,0,0" VerticalAlignment="Top"/>
+                                    <ProgressBar x:Name="systemStorageProgressBar" Margin="10,26,477,26" SmallChange="1" Foreground="#FF06B0A8"/>
+                                    <Label x:Name="dataStorageLabel" Content="Data (0B Free)" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <Label x:Name="dataStorageFreeLabel" Content="0B Free" Grid.Column="1" HorizontalAlignment="Right" Margin="0,51,10,0" VerticalAlignment="Top"/>
+                                    <ProgressBar x:Name="dataStorageProgressBar" SmallChange="1" Foreground="#FF06B0A8" Margin="477,26,10,26"/>
+                                </Grid>
+                            </GroupBox>
+                        </Grid>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="appsTab" Header="Apps" Width="120">
+                <Grid Background="#FFE5E5E5">
+                    <Button x:Name="installNewAppButton" Content="Install New" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="25" Width="75" Click="installNewAppButton_Click"/>
+                    <Label Content="Installing apps requires AppSync from cydia.akemi.ai on iOS 4-14 or from ios3.party on iOS 3.1-3.2" HorizontalAlignment="Left" Margin="90,0,0,10" VerticalAlignment="Bottom"/>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="fileSystemTab" Header="File System" Width="120">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="120">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem x:Name="restoreTab" Header="Restore" Width="120">
+                <Grid Background="#FFE5E5E5">
+                    <ListView x:Name="firmwareListView" Margin="10,31,10,48">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:Name="FwDataTemplate">
+                                <Grid Height="25" Width="920">
+                                    <Label Content="{Binding version}" HorizontalAlignment="Left"/>
+                                    <Label Content="{Binding signed}" HorizontalAlignment="Center"/>
+                                    <Label Content="{Binding uploaddate}" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <Button x:Name="refreshFirmwareButton" Content="Refresh" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="33" Width="66" Click="refreshFirmwareButton_Click"/>
+                    <Button x:Name="restoreFirmwareButton" Content="Restore" HorizontalAlignment="Left" Margin="81,0,0,10" VerticalAlignment="Bottom" Height="33" Width="66" Click="restoreFirmwareButton_Click"/>
+                    <Label Content="Version" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top"/>
+                    <Label Content="Signed" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="455,0,0,0"/>
+                    <Label Content="Release Date" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,40,0"/>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="packageManagerTab" Header="Package Manager" Width="120">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem x:Name="settingsTab" Header="Settings" Width="120">
+                <Grid Background="#FFE5E5E5">
+                    <CheckBox x:Name="enableVerboseAlertsCheckBox" Content="Enable Verbose Alerts" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                    <Button x:Name="saveSettingsButton" Content="Save Settings" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="25" Width="80"/>
+                    <Button x:Name="aboutButton" Content="About" HorizontalAlignment="Left" Margin="95,0,0,10" VerticalAlignment="Bottom" Height="25" Width="40"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>
