@@ -210,7 +210,7 @@ namespace iSuite
             {
                 fws = JObject.Parse(wc.DownloadString("https://api.ipsw.me/v2.1/firmwares.json/condensed"));
             }
-            JObject hate = fws;      
+            JObject hate = fws;
             List<ListViewItem> compatibleFws = new List<ListViewItem>();
             foreach (JObject f in hate["devices"][deviceProductType]["firmwares"])
             {
@@ -232,6 +232,17 @@ namespace iSuite
             {
                 MessageBox.Show("Please select a firmware");
                 return;
+            }
+            Firmware selectedFW = JsonConvert.DeserializeObject<Firmware>(((JObject)((ListViewItem)firmwareListView.SelectedItem).Content).ToString());
+            if (selectedFW.version.StartsWith("1.") || selectedFW.version.StartsWith("2."))
+            {
+                MessageBoxResult _result = MessageBox.Show("Restoring to iOS 1 and 2 is not supported.", "Error!");
+                return;
+            }
+            if (!selectedFW.signed)
+            {
+                MessageBoxResult _result = MessageBox.Show("This firmware is not signed, restoring will most likely fail.\nContinue?", "WARNING!", MessageBoxButton.YesNo);
+                if (result != MessageBoxResult.Yes) return;
             }
         }
 

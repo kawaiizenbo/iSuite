@@ -67,7 +67,6 @@
             </TabItem>
             <TabItem x:Name="settingsTab" Header="Settings" Width="120">
                 <Grid Background="#FFE5E5E5">
-                    <CheckBox x:Name="enableVerboseAlertsCheckBox" Content="Enable Verbose Alerts" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
                     <Button x:Name="saveSettingsButton" Content="Save Settings" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="25" Width="80"/>
                     <Button x:Name="aboutButton" Content="About" HorizontalAlignment="Left" Margin="95,0,0,10" VerticalAlignment="Bottom" Height="25" Width="40"/>
                 </Grid>
