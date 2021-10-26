@@ -5,57 +5,49 @@ using iMobileDevice.Plist;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
+using System.IO;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace iSuite
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        IiDeviceApi idevice;
-        ILockdownApi lockdown;
-        iDeviceHandle deviceHandle;
-        LockdownClientHandle lockdownHandle;
+        private readonly IiDeviceApi idevice;
+        private readonly ILockdownApi lockdown;
+        private iDeviceHandle deviceHandle;
+        private LockdownClientHandle lockdownHandle;
 
-        JObject fws;
+        private JObject fws;
+
+        private readonly string dataLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/iSuite/";
+
+        private OptionsJson options;
 
         // every info string ever
-        string deviceName; // DeviceName
-        string deviceSerialNumber;
-        string deviceProductVersion;
-        string deviceBuildVersion;
-        ulong deviceUniqueChipID = 0;
-        string deviceECID; // UniqueChipID converted to hex then string
-        string deviceProductType;
-        string deviceHardwareModel;
-        string deviceModelNumber;
-        string deviceColor;
+        private Dictionary<string, string> deviceInfo = new Dictionary<string, string>();
+        private string deviceName; // DeviceName
+        private string deviceSerialNumber;
+        private string deviceProductVersion;
+        private string deviceBuildVersion;
+        private ulong deviceUniqueChipID = 0;
+        private string deviceECID; // UniqueChipID converted to hex then string
+        private string deviceProductType;
+        private string deviceHardwareModel;
+        private string deviceModelNumber;
+        private string deviceColor;
 
         // storage related ones
-        ulong deviceTotalDiskCapacity = 0;
-        ulong deviceTotalSystemCapacity = 0;
-        ulong deviceTotalDataCapacity = 0;
-        ulong deviceTotalSystemAvailable = 0;
-        ulong deviceTotalDataAvailable = 0;
+        private ulong deviceTotalDiskCapacity = 0;
+        private ulong deviceTotalSystemCapacity = 0;
+        private ulong deviceTotalDataCapacity = 0;
+        private ulong deviceTotalSystemAvailable = 0;
+        private ulong deviceTotalDataAvailable = 0;
 
         public MainWindow()
         {
@@ -65,7 +57,20 @@ namespace iSuite
             lockdown = LibiMobileDevice.Instance.Lockdown;
 
             // Load settings
-
+            if (!Directory.Exists(dataLocation))
+            {
+                Directory.CreateDirectory(dataLocation);
+            }
+            if (!Directory.Exists(dataLocation + "IPSW/"))
+            {
+                Directory.CreateDirectory(dataLocation + "IPSW/");
+            }
+            if (!File.Exists(dataLocation + "options.json"))
+            {
+                File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(new OptionsJson()));
+            }
+            options = JsonConvert.DeserializeObject<OptionsJson>(File.ReadAllText(dataLocation + "options.json"));
+            LoadSettingsToControls();
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -90,16 +95,15 @@ namespace iSuite
                 dblSByte = bytes / 1000.0;
             }
 
-            return String.Format("{0:0.##} {1}", dblSByte, Suffix[i]);
+            return string.Format("{0:0.##} {1}", dblSByte, Suffix[i]);
         }
 
         private void Init()
         {
             // only detects devices in normal mode, ill work on recovery and dfu later
-            ReadOnlyCollection<string> udids;
             int zero = 0;
 
-            var ret = idevice.idevice_get_device_list(out udids, ref zero);
+            iDeviceError ret = idevice.idevice_get_device_list(out ReadOnlyCollection<string> udids, ref zero);
 
             if (ret == iDeviceError.NoDevice || udids.Count == 0)
             {
@@ -108,7 +112,7 @@ namespace iSuite
 
             using (WebClient wc = new WebClient())
             {
-                fws = JObject.Parse(wc.DownloadString("https://api.ipsw.me/v2.1/firmwares.json/condensed"));
+                fws = JObject.Parse(wc.DownloadString(options.fwjsonsource));
             }
 
             ret.ThrowOnError();
@@ -122,9 +126,8 @@ namespace iSuite
             continueWithoutDeviceButton.Visibility = Visibility.Hidden;
 
             // get device info
-            PlistHandle temp;
             lockdown.lockdownd_get_device_name(lockdownHandle, out deviceName).ThrowOnError();
-            lockdown.lockdownd_get_value(lockdownHandle, null, "SerialNumber", out temp).ThrowOnError();
+            lockdown.lockdownd_get_value(lockdownHandle, null, "SerialNumber", out PlistHandle temp).ThrowOnError();
             temp.Api.Plist.plist_get_string_val(temp, out deviceSerialNumber);
 
             lockdown.lockdownd_get_value(lockdownHandle, null, "ProductVersion", out temp).ThrowOnError();
@@ -182,15 +185,19 @@ namespace iSuite
             systemStorageProgressBar.Value = (int)((deviceTotalSystemCapacity - deviceTotalSystemAvailable) / 10000000);
             dataStorageProgressBar.Value = (int)((deviceTotalDataCapacity - deviceTotalDataAvailable) / 10000000);
 
-            //deviceInfoListBox.Items.Add(deviceSerialNumber);
-            //deviceInfoListBox.Items.Add(deviceECID);
-            //deviceInfoListBox.Items.Add($"{deviceProductVersion} ({deviceBuildVersion})");
-            //deviceInfoListBox.Items.Add(deviceProductType);
-            //deviceInfoListBox.Items.Add(deviceModelNumber);
-            //deviceInfoListBox.Items.Add(deviceHardwareModel);
-            //deviceInfoListBox.Items.Add(deviceColor);
+            List<ListViewItem> deviceInfoListViewItems = new List<ListViewItem>();
+            ListViewItem tempi = new ListViewItem();
+            tempi.ContentTemplate = (DataTemplate)FindName("DiDataTemplate");
+
+            deviceInfoListView.ItemsSource = deviceInfoListViewItems;
 
             mainTabControl.Visibility = Visibility.Visible;
+        }
+
+        private void LoadSettingsToControls()
+        {
+            themeSettingComboBox.SelectedItem = options.theme;
+            fwJsonSourceTextBox.Text = options.fwjsonsource;
         }
 
         private void refreshDevicesButton_Click(object sender, RoutedEventArgs e)
@@ -208,27 +215,24 @@ namespace iSuite
             // oh boy hope this doesnt ever go down
             using (WebClient wc = new WebClient())
             {
-                fws = JObject.Parse(wc.DownloadString("https://api.ipsw.me/v2.1/firmwares.json/condensed"));
+                fws = JObject.Parse(wc.DownloadString(options.fwjsonsource));
             }
-            JObject hate = fws;
             List<ListViewItem> compatibleFws = new List<ListViewItem>();
-            foreach (JObject f in hate["devices"][deviceProductType]["firmwares"])
+            foreach (JObject f in fws["devices"][deviceProductType]["firmwares"])
             {
                 ListViewItem item = new ListViewItem();
                 f["version"] = $"{f["version"]} ({f["buildid"]})";
                 item.Content = f;
-                item.ContentTemplate = (DataTemplate)this.FindName("FwDataTemplate");
+                item.ContentTemplate = (DataTemplate)FindName("FwDataTemplate");
                 compatibleFws.Add(item);
             }
             firmwareListView.ItemsSource = compatibleFws;
-            hate = null;
         }
 
         private void restoreFirmwareButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show("Restoring your device will erase ALL information\nPlease ensure that you are signed out of iCloud/Find My is disabled\nContinue?", "WARNING!", MessageBoxButton.YesNo);
-            if (result != MessageBoxResult.Yes) return;
-            if (firmwareListView.SelectedItem == null) 
+            if (MessageBox.Show("Restoring your device will erase ALL information\nPlease ensure that you are signed out of iCloud/Find My is disabled\nContinue?", "WARNING!", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+            if (firmwareListView.SelectedItem == null)
             {
                 MessageBox.Show("Please select a firmware");
                 return;
@@ -236,13 +240,12 @@ namespace iSuite
             Firmware selectedFW = JsonConvert.DeserializeObject<Firmware>(((JObject)((ListViewItem)firmwareListView.SelectedItem).Content).ToString());
             if (selectedFW.version.StartsWith("1.") || selectedFW.version.StartsWith("2."))
             {
-                MessageBoxResult _result = MessageBox.Show("Restoring to iOS 1 and 2 is not supported.", "Error!");
+                MessageBox.Show("Restoring to iOS 1 and 2 is not supported.", "Error!");
                 return;
             }
-            if (!selectedFW.signed)
+            if (!selectedFW.signed && (deviceProductType.StartsWith("iPhone1,") || deviceProductType.StartsWith("iPod1,")))
             {
-                MessageBoxResult _result = MessageBox.Show("This firmware is not signed, restoring will most likely fail.\nContinue?", "WARNING!", MessageBoxButton.YesNo);
-                if (result != MessageBoxResult.Yes) return;
+                if (MessageBox.Show("This firmware is (probably) not signed, restoring will most likely fail.\nContinue?", "WARNING!", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
             }
         }
 
@@ -263,6 +266,25 @@ namespace iSuite
             mainTabControl.SelectedItem = settingsTab;
 
             mainTabControl.Visibility = Visibility.Visible;
+        }
+
+        private void resetSettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            options = new OptionsJson();
+            File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(options));
+            LoadSettingsToControls();
+        }
+
+        private void saveSettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            options.theme = (string)themeSettingComboBox.SelectedItem;
+            options.fwjsonsource = fwJsonSourceTextBox.Text;
+            File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(options));
+        }
+
+        private void deviceInfoListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            Clipboard.SetText(((DeviceInfoElement)((ListViewItem)deviceInfoListView.SelectedItem).Content).value);
         }
     }
 }

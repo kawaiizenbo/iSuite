@@ -11,6 +11,12 @@ namespace iSuite
         public string CFBundleDisplayName { get; set; }
     }
 
+    public class DeviceInfoElement
+    {
+        public string displayName { get; set; }
+        public string value { get; set; }
+    }
+
     public class Firmware
     {
         public string version { get; set; }
@@ -26,9 +32,10 @@ namespace iSuite
     }
 
     // options.json
-    public class Options
+    public class OptionsJson
     {
-        public string theme { get; set; }
-        public string[] packageManagerRepos { get; set; }
+        public string theme { get; set; } = "Teal";
+        public string fwjsonsource { get; set; } = "https://api.ipsw.me/v2.1/firmwares.json/condensed";
+        public string[] packageManagerRepos { get; set; } = { "https://" };
     }
 }
