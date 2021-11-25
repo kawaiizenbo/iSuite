@@ -63,7 +63,7 @@ namespace iSuite
         public string authors { get; set; }
         public string displayCompat { get; set; }
         public string[] internalCompat { get; set; }
-        public string className { get; set; }
         public string type { get; set; }
+        public string site { get; set; }
     }
 }

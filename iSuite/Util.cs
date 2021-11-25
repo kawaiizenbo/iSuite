@@ -19,7 +19,7 @@ namespace iSuite
             NativeLibraries.Load();
         }
 
-        public static string jbJSON = 
+        public static string jbJSON = "bbbbbbbbbbbbbbbbbbbbb";
 
         public static string FormatBytes(ulong bytes)
         {

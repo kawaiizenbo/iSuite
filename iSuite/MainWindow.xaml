@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:iSuite"
         xmlns:System="clr-namespace:System;assembly=System.Runtime" x:Class="iSuite.MainWindow"
         mc:Ignorable="d"
-        Title="iSuite" Height="700" Width="1000" ResizeMode="CanMinimize" Loaded="Window_Loaded">
+        Title="iSuite" Height="700" Width="1000" ResizeMode="CanMinimize" Loaded="Window_Loaded" ContentRendered="Window_ContentRendered">
     <Grid>
         <Label x:Name="waitingForDeviceLabel" Content="Could not find a device..." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="36"/>
         <Label x:Name="ensureTrustedLabel" Content="Please ensure device is connected and trusted, then click refresh." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="18"/>
@@ -16,14 +16,6 @@
                 <Grid Background="#FFE5E5E5">
                     <GroupBox x:Name="deviceInfoGroupBox" Header="Loading...">
                         <Grid>
-                            <ListView x:Name="deviceInfoListView" Margin="10,10,0,145" MouseDoubleClick="deviceInfoListView_MouseDoubleClick" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Left" Width="315">
-                                <ListView.View>
-                                    <GridView>
-                                        <GridViewColumn Header="Key" Width="150" DisplayMemberBinding="{Binding Key}"/>
-                                        <GridViewColumn Header="Value" Width="150" DisplayMemberBinding="{Binding Value}"/>
-                                    </GridView>
-                                </ListView.View>
-                            </ListView>
                             <GroupBox x:Name="deviceStorageGroupBox" Header="Device Storage (0B Total)" Margin="10,0,10,10" Height="100" VerticalAlignment="Bottom">
                                 <Grid>
                                     <Label x:Name="systemStorageLabel" Content="System (0B Total)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"/>
@@ -34,10 +26,25 @@
                                     <ProgressBar x:Name="dataStorageProgressBar" SmallChange="1" Foreground="#FF06B0A8" Margin="477,26,10,26"/>
                                 </Grid>
                             </GroupBox>
-                            <Button x:Name="powerOffDeviceButton" Content="Power Off" HorizontalAlignment="Left" Margin="10,0,0,115" VerticalAlignment="Bottom" Width="70" Height="25" Click="powerOffDeviceButton_Click"/>
-                            <Button x:Name="rebootDeviceButton" Content="Reboot" HorizontalAlignment="Left" Margin="85,0,0,115" VerticalAlignment="Bottom" Width="70" Height="25"/>
-                            <Button x:Name="respringDeviceButton" Content="Respring" HorizontalAlignment="Left" Margin="160,0,0,115" VerticalAlignment="Bottom" Width="70" Height="25"/>
-                            <Button x:Name="recoveryModeToggleButton" Content="Enter Recovery" HorizontalAlignment="Left" Margin="235,0,0,115" VerticalAlignment="Bottom" Height="25" Width="90" Click="recoveryModeToggleButton_Click"/>
+                            <GroupBox Header="Device Information" Margin="10,10,0,115" HorizontalAlignment="Left" Width="340">
+                                <Grid>
+                                    <ListView x:Name="deviceInfoListView" MouseDoubleClick="deviceInfoListView_MouseDoubleClick" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Stretch" Margin="5,5,5,7">
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridViewColumn Header="Key" Width="150" DisplayMemberBinding="{Binding Key}"/>
+                                                <GridViewColumn Header="Value" Width="150" DisplayMemberBinding="{Binding Value}"/>
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                </Grid>
+                            </GroupBox>
+                            <GroupBox Header="Operations" Margin="355,438,10,115">
+                                <Grid>
+                                    <Button x:Name="powerOffDeviceButton" Content="Power Off" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Width="192" Height="35" Click="powerOffDeviceButton_Click"/>
+                                    <Button x:Name="rebootDeviceButton" Content="Reboot" HorizontalAlignment="Center" VerticalAlignment="Center" Width="192" Height="35" Click="rebootDeviceButton_Click"/>
+                                    <Button x:Name="recoveryModeToggleButton" Content="Enter Recovery" HorizontalAlignment="Left" Margin="404,0,0,0" VerticalAlignment="Center" Height="35" Width="192" Click="recoveryModeToggleButton_Click"/>
+                                </Grid>
+                            </GroupBox>
                         </Grid>
                     </GroupBox>
                 </Grid>

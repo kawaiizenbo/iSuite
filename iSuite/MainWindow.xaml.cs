@@ -74,6 +74,10 @@ namespace iSuite
             {
                 File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(new OptionsJson()));
             }
+            if (!File.Exists(dataLocation + "jailbreaks.json"))
+            {
+                File.WriteAllText(dataLocation + "jailbreaks.json", Util.jbJSON);
+            }
             options = JsonConvert.DeserializeObject<OptionsJson>(File.ReadAllText(dataLocation + "options.json"));
             if (options.packageManagerRepos == null)
             {
@@ -187,6 +191,7 @@ namespace iSuite
                     deviceInfo["ECID"] = string.Format("{0:X}", deviceUniqueChipID);
                     deviceInfo["Board Config"] = Util.GetLockdowndStringKey(lockdownHandle, null, "HardwareModel");
                     deviceInfo["Model Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ModelNumber");
+                    deviceInfo["Activated"] = (Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState") == "Activated").ToString();
 
                     deviceTotalDiskCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDiskCapacity");
                     deviceTotalSystemCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemCapacity");
@@ -216,7 +221,6 @@ namespace iSuite
                     deviceInfoGroupBox.Header = "Recovery Mode";
                     recoveryModeToggleButton.Content = "Exit Recovery";
                     powerOffDeviceButton.IsEnabled = false;
-                    respringDeviceButton.IsEnabled = false;
                     rebootDeviceButton.IsEnabled = false;
 
                     // awful
@@ -250,7 +254,6 @@ namespace iSuite
                     recoveryModeToggleButton.Content = "-------";
                     recoveryModeToggleButton.IsEnabled = false;
                     powerOffDeviceButton.IsEnabled = false;
-                    respringDeviceButton.IsEnabled = false;
                     rebootDeviceButton.IsEnabled = false;
                     break;
 
@@ -503,7 +506,14 @@ namespace iSuite
 
         private void powerOffDeviceButton_Click(object sender, RoutedEventArgs e)
         {
-
+            using (Process p = new())
+            {
+                p.StartInfo.FileName = "runtimes/win-x86/native/idevicediagnostics.exe";
+                p.StartInfo.Arguments = "shutdown";
+                p.StartInfo.CreateNoWindow = true;
+                p.Start();
+                p.WaitForExit();
+            }
         }
 
         private void recoveryModeToggleButton_Click(object sender, RoutedEventArgs e)
@@ -511,8 +521,9 @@ namespace iSuite
             if (mode == 0)
             {
                 lockdown.lockdownd_enter_recovery(lockdownHandle);
-                Process.Start(Environment.ProcessPath);
-                this.Close();
+                MainWindow w = new();
+                w.Show();
+                Close();
             }
             else
             {
@@ -524,14 +535,33 @@ namespace iSuite
                     p.Start();
                     p.WaitForExit();
                 }
-                Process.Start(Environment.ProcessPath);
-                this.Close();
+                MainWindow w = new();
+                w.Show();
+                Close();
             }
         }
 
         private void aboutButton_Click(object sender, RoutedEventArgs e)
         {
-            //Process.Start();
+            Process.Start("https://kawaiizenbo.me/abtis.html");
+        }
+
+        private void rebootDeviceButton_Click(object sender, RoutedEventArgs e)
+        {
+            using (Process p = new())
+            {
+                p.StartInfo.FileName = "runtimes/win-x86/native/idevicediagnostics.exe";
+                p.StartInfo.Arguments = "restart";
+                p.StartInfo.CreateNoWindow = true;
+                p.Start();
+                p.WaitForExit();
+            }
+        }
+
+        private void Window_ContentRendered(object sender, EventArgs e)
+        {
+            MinWidth = 1000;
+            MinHeight = 700;
         }
     }
 }
