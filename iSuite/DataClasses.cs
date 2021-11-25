@@ -11,10 +11,22 @@ namespace iSuite
         public string CFBundleDisplayName { get; set; }
     }
 
-    public class DeviceInfoElement
+    public class DebPackage
     {
-        public string displayName { get; set; }
-        public string value { get; set; }
+        public string Package { get; set; }
+        public string Version { get; set; }
+        public string Architecture { get; set; }
+        public string Maintainer { get; set; }
+        public string Conflicts { get; set; }
+        public string Filename { get; set; }
+        public string Size { get; set; }
+        public string MD5Sum { get; set; }
+        public string SHA1 { get; set; }
+        public string SHA256 { get; set; }
+        public string Section { get; set; }
+        public string Description { get; set; }
+        public string Author { get; set; }
+        public string Name { get; set; }
     }
 
     public class Firmware
@@ -36,6 +48,22 @@ namespace iSuite
     {
         public string theme { get; set; } = "Teal";
         public string fwjsonsource { get; set; } = "https://api.ipsw.me/v2.1/firmwares.json/condensed";
-        public string[] packageManagerRepos { get; set; } = { "https://" };
+        public List<string> packageManagerRepos { get; set; } 
+    }
+
+    // jailbreak.json (why does this exist???)
+    public class JailbreakJson
+    {
+        public Jailbreak[] jailbreaks { get; set; }
+    }
+
+    public class Jailbreak
+    {
+        public string name { get; set; }
+        public string authors { get; set; }
+        public string displayCompat { get; set; }
+        public string[] internalCompat { get; set; }
+        public string className { get; set; }
+        public string type { get; set; }
     }
 }

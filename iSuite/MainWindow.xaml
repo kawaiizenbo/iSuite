@@ -10,22 +10,19 @@
     <Grid>
         <Label x:Name="waitingForDeviceLabel" Content="Could not find a device..." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="36"/>
         <Label x:Name="ensureTrustedLabel" Content="Please ensure device is connected and trusted, then click refresh." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="18"/>
-        <Button x:Name="refreshDevicesButton" Content="Refresh" HorizontalAlignment="Left" Margin="9999,0,0,9999" VerticalAlignment="Bottom" Width="50" Height="20" Click="refreshDevicesButton_Click"/>
         <Button x:Name="continueWithoutDeviceButton" Content="Continue Without Device" HorizontalAlignment="Left" Margin="9999,0,0,9999" VerticalAlignment="Bottom" Width="150" Height="20" Click="continueWithoutDeviceButton_Click"/>
         <TabControl x:Name="mainTabControl">
             <TabItem x:Name="deviceInfoTab" Header="Device Info" Width="120">
                 <Grid Background="#FFE5E5E5">
                     <GroupBox x:Name="deviceInfoGroupBox" Header="Loading...">
                         <Grid>
-                            <ListView x:Name="deviceInfoListView" Margin="10,10,0,115" Width="300" HorizontalAlignment="Left" MouseDoubleClick="deviceInfoListView_MouseDoubleClick">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate x:Name="DiDataTemplate">
-                                        <Grid Height="25" Width="240">
-                                            <Label Content="{Binding displayName}" HorizontalAlignment="Left"/>
-                                            <Label Content="{Binding value}" HorizontalAlignment="Right"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
+                            <ListView x:Name="deviceInfoListView" Margin="10,10,0,145" MouseDoubleClick="deviceInfoListView_MouseDoubleClick" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Left" Width="315">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="Key" Width="150" DisplayMemberBinding="{Binding Key}"/>
+                                        <GridViewColumn Header="Value" Width="150" DisplayMemberBinding="{Binding Value}"/>
+                                    </GridView>
+                                </ListView.View>
                             </ListView>
                             <GroupBox x:Name="deviceStorageGroupBox" Header="Device Storage (0B Total)" Margin="10,0,10,10" Height="100" VerticalAlignment="Bottom">
                                 <Grid>
@@ -37,6 +34,10 @@
                                     <ProgressBar x:Name="dataStorageProgressBar" SmallChange="1" Foreground="#FF06B0A8" Margin="477,26,10,26"/>
                                 </Grid>
                             </GroupBox>
+                            <Button x:Name="powerOffDeviceButton" Content="Power Off" HorizontalAlignment="Left" Margin="10,0,0,115" VerticalAlignment="Bottom" Width="70" Height="25" Click="powerOffDeviceButton_Click"/>
+                            <Button x:Name="rebootDeviceButton" Content="Reboot" HorizontalAlignment="Left" Margin="85,0,0,115" VerticalAlignment="Bottom" Width="70" Height="25"/>
+                            <Button x:Name="respringDeviceButton" Content="Respring" HorizontalAlignment="Left" Margin="160,0,0,115" VerticalAlignment="Bottom" Width="70" Height="25"/>
+                            <Button x:Name="recoveryModeToggleButton" Content="Enter Recovery" HorizontalAlignment="Left" Margin="235,0,0,115" VerticalAlignment="Bottom" Height="25" Width="90" Click="recoveryModeToggleButton_Click"/>
                         </Grid>
                     </GroupBox>
                 </Grid>
@@ -55,33 +56,52 @@
             </TabItem>
             <TabItem x:Name="restoreTab" Header="Restore" Width="120">
                 <Grid Background="#FFE5E5E5">
-                    <ListView x:Name="firmwareListView" Margin="10,31,10,48">
-                        <ListView.ItemTemplate>
-                            <DataTemplate x:Name="FwDataTemplate">
-                                <Grid Height="25" Width="920">
-                                    <Label Content="{Binding version}" HorizontalAlignment="Left"/>
-                                    <Label Content="{Binding signed}" HorizontalAlignment="Center"/>
-                                    <Label Content="{Binding uploaddate}" HorizontalAlignment="Right"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
+                    <ListView x:Name="firmwareListView" Margin="10,10,10,48">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Version" Width="200" DisplayMemberBinding="{Binding version}"/>
+                                <GridViewColumn Header="Build ID" Width="200" DisplayMemberBinding="{Binding buildid}"/>
+                                <GridViewColumn Header="Signed" Width="200" DisplayMemberBinding="{Binding signed}"/>
+                                <GridViewColumn Header="Release Date" Width="200" DisplayMemberBinding="{Binding uploaddate}"/>
+                            </GridView>
+                        </ListView.View>
                     </ListView>
                     <Button x:Name="refreshFirmwareButton" Content="Refresh" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="33" Width="66" Click="refreshFirmwareButton_Click"/>
                     <Button x:Name="restoreFirmwareButton" Content="Restore" HorizontalAlignment="Left" Margin="81,0,0,10" VerticalAlignment="Bottom" Height="33" Width="66" Click="restoreFirmwareButton_Click"/>
-                    <Label Content="Version" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top"/>
-                    <Label Content="Signed" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="455,0,0,0"/>
-                    <Label Content="Release Date" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,40,0"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="packageManagerTab" Header="Package Manager" Width="120">
-                <Grid Background="#FFE5E5E5"/>
+                <Grid Background="#FFE5E5E5">
+                    <GroupBox Header="Repos" Margin="10,10,754,10">
+                        <Grid>
+                            <Button x:Name="addRepoButton" Content="Add Repo" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="20" Click="addRepoButton_Click" Margin="5,0,5,30"/>
+                            <TextBox x:Name="addRepoTextBox" HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="http://" VerticalAlignment="Bottom" Height="20" Margin="5,0,5,55"/>
+                            <Button x:Name="removeSelectedRepoButton" Content="Remove Selected Repo" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="20" Margin="5,0,5,5" Click="removeSelectedRepoButton_Click"/>
+                            <ListBox x:Name="repoListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="5,5,5,83" MouseDoubleClick="repoListBox_MouseDoubleClick"/>
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox x:Name="packagesLVGB" Header="Packages" Margin="245,10,10,10">
+                        <Grid>
+                            <ListView x:Name="packagesListView" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="5,5,5,5" MouseDoubleClick="packagesListView_MouseDoubleClick">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn x:Name="packageNameColumn" Header="Package Name" Width="150" DisplayMemberBinding="{Binding Name}"/>
+                                        <GridViewColumn x:Name="packageIdColumn" Header="Package ID" Width="150" DisplayMemberBinding="{Binding Package}"/>
+                                        <GridViewColumn x:Name="developerColumn" Header="Developer" Width="150" DisplayMemberBinding="{Binding Author}"/>
+                                        <GridViewColumn x:Name="versionColumn" Header="Version" Width="150" DisplayMemberBinding="{Binding Version}"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                        </Grid>
+                    </GroupBox>
+                </Grid>
             </TabItem>
             <TabItem x:Name="settingsTab" Header="Settings" Width="120">
                 <Grid Background="#FFE5E5E5">
                     <Button x:Name="saveSettingsButton" Content="Save Settings" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="25" Width="80" Click="saveSettingsButton_Click"/>
-                    <Button x:Name="aboutButton" Content="About" HorizontalAlignment="Left" Margin="180,0,0,10" VerticalAlignment="Bottom" Height="25" Width="40"/>
+                    <Button x:Name="aboutButton" Content="About" HorizontalAlignment="Left" Margin="180,0,0,10" VerticalAlignment="Bottom" Height="25" Width="40" Click="aboutButton_Click"/>
                     <Button x:Name="resetSettingsButton" Content="Reset Settings" HorizontalAlignment="Left" Margin="95,0,11,10" VerticalAlignment="Bottom" Height="25" Width="80" Click="resetSettingsButton_Click"/>
-                    <ComboBox x:Name="themeSettingComboBox" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Width="300" IsDropDownOpen="True">
+                    <ComboBox x:Name="themeSettingComboBox" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Width="300" IsDropDownOpen="False">
                         <System:String>Teal</System:String>
                         <System:String>Pink</System:String>
                         <System:String>Purple</System:String>
