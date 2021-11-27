@@ -38,9 +38,13 @@
                                     </ListView>
                                 </Grid>
                             </GroupBox>
-                            <Button x:Name="powerOffDeviceButton" Content="Power Off" HorizontalAlignment="Left" Margin="355,0,0,115" VerticalAlignment="Bottom" Width="100" Height="35" Click="powerOffDeviceButton_Click"/>
-                            <Button x:Name="rebootDeviceButton" Content="Reboot" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="100" Height="35" Click="rebootDeviceButton_Click" Margin="355,0,0,155"/>
-                            <Button x:Name="recoveryModeToggleButton" Content="Enter Recovery" HorizontalAlignment="Left" Margin="355,0,0,195" VerticalAlignment="Bottom" Height="35" Width="100" Click="recoveryModeToggleButton_Click"/>
+                            <GroupBox Header="Operations" Margin="355,438,10,115">
+                                <Grid>
+                                    <Button x:Name="powerOffDeviceButton" Content="Power Off" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Width="192" Height="35" Click="powerOffDeviceButton_Click"/>
+                                    <Button x:Name="rebootDeviceButton" Content="Reboot" HorizontalAlignment="Center" VerticalAlignment="Center" Width="192" Height="35" Click="rebootDeviceButton_Click"/>
+                                    <Button x:Name="recoveryModeToggleButton" Content="Enter Recovery" HorizontalAlignment="Left" Margin="404,0,0,0" VerticalAlignment="Center" Height="35" Width="192" Click="recoveryModeToggleButton_Click"/>
+                                </Grid>
+                            </GroupBox>
                         </Grid>
                     </GroupBox>
                 </Grid>

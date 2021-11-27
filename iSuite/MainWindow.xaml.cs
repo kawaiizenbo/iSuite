@@ -24,16 +24,14 @@ namespace iSuite
 {
     public partial class MainWindow : Window
     {
-        private IiDeviceApi idevice;
-        private ILockdownApi lockdown;
+        private readonly IiDeviceApi idevice;
+        private readonly ILockdownApi lockdown;
         private iDeviceHandle deviceHandle;
         private LockdownClientHandle lockdownHandle;
 
         private JObject fws;
 
-        bool normalConnected = false;
-        bool recoveryConnected = false;
-        bool dfuConnected = true;
+        byte mode = 4;
 
         private readonly string dataLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/iSuite/";
 
@@ -43,7 +41,7 @@ namespace iSuite
         private ulong deviceUniqueChipID = 0; // ecid
         private string deviceUUID;
 
-        private bool shouldStopDetecting = false;
+        private bool deviceDetected = false;
 
         // storage related device info
         private ulong deviceTotalDiskCapacity = 0;
@@ -106,12 +104,12 @@ namespace iSuite
 
             // check for them until you dont need to check for them anymore
             await Task.Run(new Action(DeviceDetectorThread));
-            await Init();
+            await Init(mode);
         }
 
         private void DeviceDetectorThread()
         {
-            while (!shouldStopDetecting)
+            while (!deviceDetected)
             {
                 int count = 0;
 
@@ -136,16 +134,14 @@ namespace iSuite
                         string text = process.StandardOutput.ReadToEnd();
                         if (text.Contains("Recovery"))
                         {
-                            recoveryConnected = true;
-                            dfuConnected = false;
-                            normalConnected = false;
+                            mode = 1;
+                            deviceDetected = true;
                             continue;
                         }
                         else if (text.Contains("DFU"))
                         {
-                            dfuConnected = true;
-                            recoveryConnected = false;
-                            normalConnected = false;
+                            mode = 2;
+                            deviceDetected = true;
                             continue;
                         }
                     }
@@ -156,16 +152,15 @@ namespace iSuite
                     ret.ThrowOnError();
                     idevice.idevice_new(out deviceHandle, udids[0]).ThrowOnError();
                     lockdown.lockdownd_client_new_with_handshake(deviceHandle, out lockdownHandle, "iSuite").ThrowOnError();
-                    dfuConnected = false;
-                    recoveryConnected = false;
-                    normalConnected = true;
+                    mode = 0;
+                    deviceDetected = true;
                     continue;
                 }
                 Thread.Sleep(1000);
             }
         }
 
-        private async Task Init()
+        private async Task Init(byte lmode)
         {
             // byte mode
             // 0 = normal
@@ -523,9 +518,12 @@ namespace iSuite
 
         private void recoveryModeToggleButton_Click(object sender, RoutedEventArgs e)
         {
-            if (normalConnected)
+            if (mode == 0)
             {
                 lockdown.lockdownd_enter_recovery(lockdownHandle);
+                MainWindow w = new();
+                w.Show();
+                Close();
             }
             else
             {
@@ -537,6 +535,9 @@ namespace iSuite
                     p.Start();
                     p.WaitForExit();
                 }
+                MainWindow w = new();
+                w.Show();
+                Close();
             }
         }
 
