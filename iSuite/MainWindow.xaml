@@ -6,10 +6,10 @@
         xmlns:local="clr-namespace:iSuite"
         xmlns:System="clr-namespace:System;assembly=System.Runtime" x:Class="iSuite.MainWindow"
         mc:Ignorable="d"
-        Title="iSuite" Height="700" Width="1000" ResizeMode="CanMinimize" Loaded="Window_Loaded">
+        Title="iSuite" Height="700" Width="1000" ResizeMode="CanMinimize" Loaded="Window_Loaded" ContentRendered="Window_ContentRendered">
     <Grid>
-        <Label x:Name="waitingForDeviceLabel" Content="Waiting for device..." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="36"/>
-        <Label x:Name="ensureTrustedLabel" Content="Please ensure device is connected and trusted." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="18"/>
+        <Label x:Name="waitingForDeviceLabel" Content="Could not find a device..." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="36"/>
+        <Label x:Name="ensureTrustedLabel" Content="Please ensure device is connected and trusted, then click refresh." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="18"/>
         <Button x:Name="continueWithoutDeviceButton" Content="Continue Without Device" HorizontalAlignment="Left" Margin="9999,0,0,9999" VerticalAlignment="Bottom" Width="150" Height="20" Click="continueWithoutDeviceButton_Click"/>
         <TabControl x:Name="mainTabControl">
             <TabItem x:Name="deviceInfoTab" Header="Device Info" Width="120">

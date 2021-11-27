@@ -9,7 +9,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace iSuite
 {
@@ -19,6 +18,8 @@ namespace iSuite
         {
             NativeLibraries.Load();
         }
+
+        public static string jbJSON = "bbbbbbbbbbbbbbbbbbbbb";
 
         public static string FormatBytes(ulong bytes)
         {
