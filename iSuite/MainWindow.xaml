@@ -8,9 +8,10 @@
         mc:Ignorable="d"
         Title="iSuite" Height="700" Width="1000" ResizeMode="CanMinimize" Loaded="Window_Loaded" ContentRendered="Window_ContentRendered">
     <Grid>
-        <Label x:Name="waitingForDeviceLabel" Content="Could not find a device..." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="36"/>
-        <Label x:Name="ensureTrustedLabel" Content="Please ensure device is connected and trusted, then click refresh." HorizontalAlignment="Left" Margin="9999,9999,0,0" VerticalAlignment="Top" FontSize="18"/>
-        <Button x:Name="continueWithoutDeviceButton" Content="Continue Without Device" HorizontalAlignment="Left" Margin="9999,0,0,9999" VerticalAlignment="Bottom" Width="150" Height="20" Click="continueWithoutDeviceButton_Click"/>
+        <Label x:Name="waitingForDeviceLabel" Content="Waiting for device..." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="36" Margin="0,0,0,100"/>
+        <Label x:Name="ensureTrustedLabel" Content="Please ensure device is connected and trusted." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18"/>
+        <Button x:Name="continueWithoutDeviceButton" Content="Continue Without Device" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="150" Height="20" Click="continueWithoutDeviceButton_Click" Margin="10,0,0,10"/>
+        <Image x:Name="usb" Width="300" Height="300" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
         <TabControl x:Name="mainTabControl">
             <TabItem x:Name="deviceInfoTab" Header="Device Info" Width="120">
                 <Grid Background="#FFE5E5E5">
@@ -26,23 +27,23 @@
                                     <ProgressBar x:Name="dataStorageProgressBar" SmallChange="1" Foreground="#FF06B0A8" Margin="477,26,10,26"/>
                                 </Grid>
                             </GroupBox>
-                            <GroupBox Header="Device Information" Margin="10,10,0,115" HorizontalAlignment="Left" Width="340">
+                            <GroupBox Header="Device Information" Margin="10,10,0,115" HorizontalAlignment="Left" Width="435">
                                 <Grid>
                                     <ListView x:Name="deviceInfoListView" MouseDoubleClick="deviceInfoListView_MouseDoubleClick" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Stretch" Margin="5,5,5,7">
                                         <ListView.View>
                                             <GridView>
-                                                <GridViewColumn Header="Key" Width="150" DisplayMemberBinding="{Binding Key}"/>
-                                                <GridViewColumn Header="Value" Width="150" DisplayMemberBinding="{Binding Value}"/>
+                                                <GridViewColumn Header="Key" Width="100" DisplayMemberBinding="{Binding Key}"/>
+                                                <GridViewColumn Header="Value" Width="300" DisplayMemberBinding="{Binding Value}"/>
                                             </GridView>
                                         </ListView.View>
                                     </ListView>
                                 </Grid>
                             </GroupBox>
-                            <GroupBox Header="Operations" Margin="355,438,10,115">
+                            <GroupBox Header="Operations" Margin="450,0,10,115" Height="80" VerticalAlignment="Bottom">
                                 <Grid>
-                                    <Button x:Name="powerOffDeviceButton" Content="Power Off" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Width="192" Height="35" Click="powerOffDeviceButton_Click"/>
-                                    <Button x:Name="rebootDeviceButton" Content="Reboot" HorizontalAlignment="Center" VerticalAlignment="Center" Width="192" Height="35" Click="rebootDeviceButton_Click"/>
-                                    <Button x:Name="recoveryModeToggleButton" Content="Enter Recovery" HorizontalAlignment="Left" Margin="404,0,0,0" VerticalAlignment="Center" Height="35" Width="192" Click="recoveryModeToggleButton_Click"/>
+                                    <Button x:Name="powerOffDeviceButton" Content="Power Off" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Width="160" Height="35" Click="powerOffDeviceButton_Click"/>
+                                    <Button x:Name="rebootDeviceButton" Content="Reboot" HorizontalAlignment="Center" VerticalAlignment="Center" Width="160" Height="35" Click="rebootDeviceButton_Click"/>
+                                    <Button x:Name="recoveryModeToggleButton" Content="Enter Recovery" HorizontalAlignment="Right" VerticalAlignment="Center" Height="35" Width="160" Click="recoveryModeToggleButton_Click" Margin="0,0,10,0"/>
                                 </Grid>
                             </GroupBox>
                         </Grid>
@@ -52,29 +53,45 @@
             <TabItem x:Name="appsTab" Header="Apps" Width="120">
                 <Grid Background="#FFE5E5E5">
                     <Button x:Name="installNewAppButton" Content="Install New" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="25" Width="75" Click="installNewAppButton_Click"/>
-                    <Label Content="Installing apps requires AppSync from cydia.akemi.ai on iOS 4-14 or from ios3.party on iOS 3.1-3.2" HorizontalAlignment="Left" Margin="90,0,0,10" VerticalAlignment="Bottom"/>
+                    <Label Content="Installing apps requires AppSync from cydia.akemi.ai on iOS 4-14 or from ios3.party on iOS 3.1-3.2" HorizontalAlignment="Left" Margin="130,0,0,10" VerticalAlignment="Bottom" FontSize="10"/>
+                    <ListBox x:Name="appInstallStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,10,10,10" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="320"/>
+                    <ListView x:Name="installedAppsListView" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,10,335,41">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="App Name" Width="200" DisplayMemberBinding="{Binding CFBundleDisplayName}"/>
+                                <GridViewColumn Header="Version" Width="200" DisplayMemberBinding="{Binding CFBundleVersion}"/>
+                                <GridViewColumn Header="Bundle ID" Width="200" DisplayMemberBinding="{Binding CFBundleIdentifier}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <Button x:Name="refreshAppListButton" Content="&#xE117;" HorizontalAlignment="Left" Margin="90,0,0,10" VerticalAlignment="Bottom" Width="35" Height="25" FontFamily="Segoe UI Symbol" Click="refreshAppListButton_Click"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="fileSystemTab" Header="File System" Width="120">
-                <Grid Background="#FFE5E5E5"/>
+                <Grid Background="#FFE5E5E5">
+                    <TextBox x:Name="afcPathTextBox" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="240" Height="20"/>
+                    <Button x:Name="afcGoButton" Content="Go" HorizontalAlignment="Left" Margin="255,10,0,0" VerticalAlignment="Top" Height="20" Width="30" Click="afcGoButton_Click"/>
+                    <ListBox x:Name="afcListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,35,10,10" MouseDoubleClick="afcListBox_MouseDoubleClick"/>
+                </Grid>
             </TabItem>
             <TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="120">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
             <TabItem x:Name="restoreTab" Header="Restore" Width="120">
                 <Grid Background="#FFE5E5E5">
-                    <ListView x:Name="firmwareListView" Margin="10,10,10,48">
+                    <ListView x:Name="firmwareListView" Margin="10,10,420,48">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Version" Width="200" DisplayMemberBinding="{Binding version}"/>
-                                <GridViewColumn Header="Build ID" Width="200" DisplayMemberBinding="{Binding buildid}"/>
-                                <GridViewColumn Header="Signed" Width="200" DisplayMemberBinding="{Binding signed}"/>
+                                <GridViewColumn Header="Version" Width="100" DisplayMemberBinding="{Binding version}"/>
+                                <GridViewColumn Header="Build ID" Width="100" DisplayMemberBinding="{Binding buildid}"/>
+                                <GridViewColumn Header="Signed" Width="100" DisplayMemberBinding="{Binding signed}"/>
                                 <GridViewColumn Header="Release Date" Width="200" DisplayMemberBinding="{Binding uploaddate}"/>
                             </GridView>
                         </ListView.View>
                     </ListView>
                     <Button x:Name="refreshFirmwareButton" Content="Refresh" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="33" Width="66" Click="refreshFirmwareButton_Click"/>
                     <Button x:Name="restoreFirmwareButton" Content="Restore" HorizontalAlignment="Left" Margin="81,0,0,10" VerticalAlignment="Bottom" Height="33" Width="66" Click="restoreFirmwareButton_Click"/>
+                    <ListBox x:Name="restoreStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,10,10,10" HorizontalAlignment="Right" Width="405"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="packageManagerTab" Header="Package Manager" Width="120">
@@ -93,9 +110,9 @@
                                 <ListView.View>
                                     <GridView>
                                         <GridViewColumn x:Name="packageNameColumn" Header="Package Name" Width="150" DisplayMemberBinding="{Binding Name}"/>
-                                        <GridViewColumn x:Name="packageIdColumn" Header="Package ID" Width="150" DisplayMemberBinding="{Binding Package}"/>
-                                        <GridViewColumn x:Name="developerColumn" Header="Developer" Width="150" DisplayMemberBinding="{Binding Author}"/>
-                                        <GridViewColumn x:Name="versionColumn" Header="Version" Width="150" DisplayMemberBinding="{Binding Version}"/>
+                                        <GridViewColumn x:Name="packageIdColumn" Header="Package ID" Width="200" DisplayMemberBinding="{Binding Package}"/>
+                                        <GridViewColumn x:Name="developerColumn" Header="Developer" Width="200" DisplayMemberBinding="{Binding Author}"/>
+                                        <GridViewColumn x:Name="versionColumn" Header="Version" Width="75" DisplayMemberBinding="{Binding Version}"/>
                                     </GridView>
                                 </ListView.View>
                             </ListView>

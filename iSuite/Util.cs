@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace iSuite
 {
@@ -18,8 +19,6 @@ namespace iSuite
         {
             NativeLibraries.Load();
         }
-
-        public static string jbJSON = "bbbbbbbbbbbbbbbbbbbbb";
 
         public static string FormatBytes(ulong bytes)
         {
@@ -34,7 +33,7 @@ namespace iSuite
             return string.Format("{0:0.##} {1}", dblSByte, Suffix[i]);
         }
 
-        static string CalculateMD5(string fileName)
+        public static string CalculateMD5(string fileName)
         {
             using (var md5 = MD5.Create())
             {
@@ -56,18 +55,40 @@ namespace iSuite
         public static string GetLockdowndStringKey(LockdownClientHandle lockdownHandle, string domain, string key)
         {
             ILockdownApi lockdown = LibiMobileDevice.Instance.Lockdown;
-            lockdown.lockdownd_get_value(lockdownHandle, domain, key, out PlistHandle temp).ThrowOnError();
-            temp.Api.Plist.plist_get_string_val(temp, out string s);
-            return s;
+            try
+            {
+                lockdown.lockdownd_get_value(lockdownHandle, domain, key, out PlistHandle temp).ThrowOnError();
+                temp.Api.Plist.plist_get_string_val(temp, out string s);
+                return s;
+            }
+            catch (Exception)
+            {
+                throw new LockdownException();
+            }
         }
 
-        public static ulong GetLockdowndUlongKey(LockdownClientHandle lockdownHandle, string? domain, string key)
+        public static ulong GetLockdowndUlongKey(LockdownClientHandle lockdownHandle, string domain, string key)
         {
             ILockdownApi lockdown = LibiMobileDevice.Instance.Lockdown;
             ulong u = 0;
             lockdown.lockdownd_get_value(lockdownHandle, domain, key, out PlistHandle temp).ThrowOnError();
             temp.Api.Plist.plist_get_uint_val(temp, ref u);
             return u;
+        }
+
+        public static BitmapImage BitmapToImageSource(System.Drawing.Bitmap bitmap)
+        {
+            using (MemoryStream memory = new MemoryStream())
+            {
+                bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+                memory.Position = 0;
+                BitmapImage bitmapimage = new BitmapImage();
+                bitmapimage.BeginInit();
+                bitmapimage.StreamSource = memory;
+                bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapimage.EndInit();
+                return bitmapimage;
+            }
         }
     }
 }

@@ -2,10 +2,9 @@
 using ICSharpCode.SharpZipLib.GZip;
 
 using iMobileDevice;
+using iMobileDevice.Afc;
 using iMobileDevice.iDevice;
 using iMobileDevice.Lockdown;
-using iMobileDevice.Plist;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -14,6 +13,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,24 +24,35 @@ namespace iSuite
 {
     public partial class MainWindow : Window
     {
-        private readonly IiDeviceApi idevice;
-        private readonly ILockdownApi lockdown;
+        private IiDeviceApi idevice;
+        private ILockdownApi lockdown;
+        private IAfcApi afc;
         private iDeviceHandle deviceHandle;
         private LockdownClientHandle lockdownHandle;
+        private LockdownServiceDescriptorHandle lockdownServiceHandle;
+        private AfcClientHandle afcHandle;
 
         private JObject fws;
 
-        byte mode = 4;
+        private bool shouldStopDetecting = false;
 
-        private readonly string dataLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/iSuite/";
+        private bool normalConnected = false;
+        private bool recoveryConnected = false;
+        private bool dfuConnected = false;
+
+        private string dataLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/iSuite/";
 
         private OptionsJson options;
+        private JailbreakJson jailbreaks;
 
-        private readonly Dictionary<string, string> deviceInfo = new();
+        private string ipaPath;
+        private string afcPath = "/";
+        private string ipswPath;
+
+        private Dictionary<string, string> deviceInfo = new();
+        private List<DeviceApp> apps = new();
         private ulong deviceUniqueChipID = 0; // ecid
         private string deviceUUID;
-
-        private bool deviceDetected = false;
 
         // storage related device info
         private ulong deviceTotalDiskCapacity = 0;
@@ -56,6 +67,7 @@ namespace iSuite
             InitializeComponent();
             idevice = LibiMobileDevice.Instance.iDevice;
             lockdown = LibiMobileDevice.Instance.Lockdown;
+            afc = LibiMobileDevice.Instance.Afc;
 
             // Load settings
             if (!Directory.Exists(dataLocation))
@@ -70,27 +82,29 @@ namespace iSuite
             {
                 Directory.CreateDirectory(dataLocation + "temp/");
             }
+            if (!Directory.Exists(dataLocation + "bin/"))
+            {
+                Directory.CreateDirectory(dataLocation + "bin/");
+            }
             if (!File.Exists(dataLocation + "options.json"))
             {
                 File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(new OptionsJson()));
             }
-            if (!File.Exists(dataLocation + "jailbreaks.json"))
+            if (!File.Exists($"{dataLocation}bin/futurerestore-v194.exe"))
             {
-                File.WriteAllText(dataLocation + "jailbreaks.json", Util.jbJSON);
+                File.WriteAllBytes($"{dataLocation}bin/futurerestore-v194.exe", iSuite.Resources.futurerestore_v194);
             }
             options = JsonConvert.DeserializeObject<OptionsJson>(File.ReadAllText(dataLocation + "options.json"));
             if (options.packageManagerRepos == null)
             {
                 options.packageManagerRepos = new() { "http://repo.kawaiizenbo.me/", "http://cydia.invoxiplaygames.uk/" };
             }
+            usb.Source = Util.BitmapToImageSource(iSuite.Resources.usb);
             LoadSettingsToControls();
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             mainTabControl.Visibility = Visibility.Hidden;
-            waitingForDeviceLabel.Margin = new Thickness(10, 10, 0, 0);
-            ensureTrustedLabel.Margin = new Thickness(10, 68, 0, 0);
-            continueWithoutDeviceButton.Margin = new Thickness(10, 0, 0, 10);
 
             // murder
             using (Process p = new())
@@ -104,12 +118,12 @@ namespace iSuite
 
             // check for them until you dont need to check for them anymore
             await Task.Run(new Action(DeviceDetectorThread));
-            await Init(mode);
+            await Init();
         }
 
         private void DeviceDetectorThread()
         {
-            while (!deviceDetected)
+            while (!shouldStopDetecting)
             {
                 int count = 0;
 
@@ -134,15 +148,17 @@ namespace iSuite
                         string text = process.StandardOutput.ReadToEnd();
                         if (text.Contains("Recovery"))
                         {
-                            mode = 1;
-                            deviceDetected = true;
-                            continue;
+                            recoveryConnected = true;
+                            dfuConnected = false;
+                            normalConnected = false;
+                            shouldStopDetecting = true;
                         }
                         else if (text.Contains("DFU"))
                         {
-                            mode = 2;
-                            deviceDetected = true;
-                            continue;
+                            dfuConnected = true;
+                            recoveryConnected = false;
+                            normalConnected = false;
+                            shouldStopDetecting = true;
                         }
                     }
                 }
@@ -152,131 +168,163 @@ namespace iSuite
                     ret.ThrowOnError();
                     idevice.idevice_new(out deviceHandle, udids[0]).ThrowOnError();
                     lockdown.lockdownd_client_new_with_handshake(deviceHandle, out lockdownHandle, "iSuite").ThrowOnError();
-                    mode = 0;
-                    deviceDetected = true;
-                    continue;
+                    lockdown.lockdownd_start_service(lockdownHandle, "com.apple.afc", out lockdownServiceHandle);
+                    lockdownHandle.Api.Afc.afc_client_new(deviceHandle, lockdownServiceHandle, out afcHandle);
+                    dfuConnected = false;
+                    recoveryConnected = false;
+                    normalConnected = true;
+                    shouldStopDetecting = true;
                 }
                 Thread.Sleep(1000);
             }
         }
 
-        private async Task Init(byte lmode)
+        private async Task Init()
         {
-            // byte mode
-            // 0 = normal
-            // 1 = recovery
-            // 2 = dfu
-            // 3 = no device
 
             using (HttpClient wc = new())
             {
-                fws = JObject.Parse(await wc.GetStringAsync(options.fwjsonsource));
+                File.WriteAllText(dataLocation + "fws.json", await wc.GetStringAsync(options.fwjsonsource));
+                fws = JObject.Parse(await File.ReadAllTextAsync(dataLocation + "fws.json"));
             }
 
-            // make the ugly large text go away
-            waitingForDeviceLabel.Visibility = Visibility.Hidden;
-            ensureTrustedLabel.Visibility = Visibility.Hidden;
-            continueWithoutDeviceButton.Visibility = Visibility.Hidden;
-
-            switch (lmode)
+            if (normalConnected)
             {
-                case 0:
-                    // get device info
-                    deviceInfo["Name"] = Util.GetLockdowndStringKey(lockdownHandle, null, "DeviceName");
-                    deviceInfo["Serial Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "SerialNumber");
-                    deviceInfo["Version"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductVersion");
-                    deviceInfo["Identifier"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductType");
-                    deviceInfo["Build"] = Util.GetLockdowndStringKey(lockdownHandle, null, "BuildVersion");
-                    deviceUniqueChipID = Util.GetLockdowndUlongKey(lockdownHandle, null, "UniqueChipID");
-                    deviceInfo["ECID"] = string.Format("{0:X}", deviceUniqueChipID);
-                    deviceInfo["Board Config"] = Util.GetLockdowndStringKey(lockdownHandle, null, "HardwareModel");
-                    deviceInfo["Model Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ModelNumber");
-                    deviceInfo["Activated"] = (Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState") == "Activated").ToString();
-
-                    deviceTotalDiskCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDiskCapacity");
-                    deviceTotalSystemCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemCapacity");
-                    deviceTotalDataCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataCapacity");
-                    deviceTotalSystemAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemAvailable");
-                    deviceTotalDataAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataAvailable");
-
-                    deviceInfoGroupBox.Header = fws["devices"][deviceInfo["Identifier"]]["name"];
-                    deviceStorageGroupBox.Header = $"Device Storage ({Util.FormatBytes(deviceTotalDiskCapacity)} Total)";
-
-                    systemStorageLabel.Content = $"System ({Util.FormatBytes(deviceTotalSystemCapacity)} Total)";
-                    dataStorageLabel.Content = $"Data ({Util.FormatBytes(deviceTotalDataCapacity)} Total)";
-
-                    systemStorageFreeLabel.Content = $"{Util.FormatBytes(deviceTotalSystemAvailable)} Free";
-                    dataStorageFreeLabel.Content = $"{Util.FormatBytes(deviceTotalDataAvailable)} Free";
-
-                    systemStorageProgressBar.Maximum = (int)(deviceTotalSystemCapacity / 10000000);
-                    dataStorageProgressBar.Maximum = (int)(deviceTotalDataCapacity / 10000000);
-
-                    systemStorageProgressBar.Value = (int)((deviceTotalSystemCapacity - deviceTotalSystemAvailable) / 10000000);
-                    dataStorageProgressBar.Value = (int)((deviceTotalDataCapacity - deviceTotalDataAvailable) / 10000000);
-
-                    deviceInfoListView.ItemsSource = deviceInfo;
-                    break;
-
-                case 1:
-                    deviceInfoGroupBox.Header = "Recovery Mode";
-                    recoveryModeToggleButton.Content = "Exit Recovery";
-                    powerOffDeviceButton.IsEnabled = false;
-                    rebootDeviceButton.IsEnabled = false;
-
-                    // awful
-                    using (Process p = new())
+                // get device info
+                deviceInfo["Name"] = Util.GetLockdowndStringKey(lockdownHandle, null, "DeviceName");
+                deviceInfo["Identifier"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductType");
+                deviceInfo["Model Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ModelNumber") + Util.GetLockdowndStringKey(lockdownHandle, null, "RegionInfo");
+                deviceInfo["Board Config"] = Util.GetLockdowndStringKey(lockdownHandle, null, "HardwareModel");
+                deviceInfo["Version"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductVersion");
+                deviceInfo["Build"] = Util.GetLockdowndStringKey(lockdownHandle, null, "BuildVersion");
+                try
+                {
+                    deviceInfo["Baseband Ver."] = Util.GetLockdowndStringKey(lockdownHandle, null, "BasebandVersion");
+                }
+                catch { }
+                deviceUniqueChipID = Util.GetLockdowndUlongKey(lockdownHandle, null, "UniqueChipID");
+                deviceInfo["Serial Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "SerialNumber");
+                deviceInfo["ECID"] = string.Format("{0:X}", deviceUniqueChipID);
+                try
+                {
+                    if (Util.GetLockdowndStringKey(lockdownHandle, null, "InternationalMobileEquipmentIdentity") == null)
                     {
-                        p.StartInfo.FileName = "runtimes/win-x86/native/irecovery.exe";
-                        p.StartInfo.Arguments = "-q";
-                        p.StartInfo.CreateNoWindow = true;
-                        p.StartInfo.UseShellExecute = false;
-                        p.StartInfo.RedirectStandardOutput = true;
-                        p.Start();
-                        while (!p.StandardOutput.EndOfStream)
+                        deviceInfo["MEID"] = Util.GetLockdowndStringKey(lockdownHandle, null, "MobileEquipmentIdentifier");
+                    }
+                    else
+                    {
+                        deviceInfo["IMEI"] = Util.GetLockdowndStringKey(lockdownHandle, null, "InternationalMobileEquipmentIdentity");
+                    }
+                    deviceInfo["Phone Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "PhoneNumber");
+                }
+                catch { }
+                deviceInfo["MAC Address"] = Util.GetLockdowndStringKey(lockdownHandle, null, "WiFiAddress").ToUpper();
+                deviceInfo["UUID"] = deviceUUID;
+                deviceInfo["Activated"] = (Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState") == "Activated").ToString();
+
+                deviceTotalDiskCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDiskCapacity");
+                deviceTotalSystemCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemCapacity");
+                deviceTotalDataCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataCapacity");
+                deviceTotalSystemAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemAvailable");
+                deviceTotalDataAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataAvailable");
+
+                deviceInfoGroupBox.Header = fws["devices"][deviceInfo["Identifier"]]["name"];
+                deviceStorageGroupBox.Header = $"Device Storage ({Util.FormatBytes(deviceTotalDiskCapacity)} Total)";
+
+                systemStorageLabel.Content = $"System ({Util.FormatBytes(deviceTotalSystemCapacity)} Total)";
+                dataStorageLabel.Content = $"Data ({Util.FormatBytes(deviceTotalDataCapacity)} Total)";
+
+                systemStorageFreeLabel.Content = $"{Util.FormatBytes(deviceTotalSystemAvailable)} Free";
+                dataStorageFreeLabel.Content = $"{Util.FormatBytes(deviceTotalDataAvailable)} Free";
+
+                systemStorageProgressBar.Maximum = (int)(deviceTotalSystemCapacity / 10000000);
+                dataStorageProgressBar.Maximum = (int)(deviceTotalDataCapacity / 10000000);
+
+                systemStorageProgressBar.Value = (int)((deviceTotalSystemCapacity - deviceTotalSystemAvailable) / 10000000);
+                dataStorageProgressBar.Value = (int)((deviceTotalDataCapacity - deviceTotalDataAvailable) / 10000000);
+
+                deviceInfoListView.ItemsSource = deviceInfo;
+
+                // get apps
+                await Task.Run(new Action(GetAppsThread));
+                installedAppsListView.ItemsSource = apps;
+
+                // load fs to listbox
+                firmwareListView.ItemsSource = fws["devices"][deviceInfo["Identifier"]]["firmwares"];
+
+                // afc
+                afcPathTextBox.Text = afcPath;
+                try
+                {
+                    afc.afc_read_directory(afcHandle, afcPath, out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
+                    afcListBox.ItemsSource = afcDirectory;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+            else if (recoveryConnected)
+            {
+                deviceInfoGroupBox.Header = "Recovery Mode";
+                recoveryModeToggleButton.Content = "Exit Recovery";
+                powerOffDeviceButton.IsEnabled = false;
+                rebootDeviceButton.IsEnabled = false;
+
+                // awful
+                using (Process p = new())
+                {
+                    p.StartInfo.FileName = "runtimes/win-x86/native/irecovery.exe";
+                    p.StartInfo.Arguments = "-q";
+                    p.StartInfo.CreateNoWindow = true;
+                    p.StartInfo.UseShellExecute = false;
+                    p.StartInfo.RedirectStandardOutput = true;
+                    p.Start();
+                    while (!p.StandardOutput.EndOfStream)
+                    {
+                        string line = p.StandardOutput.ReadLine();
+                        if (line.StartsWith("ECID: "))
                         {
-                            string line = p.StandardOutput.ReadLine();
-                            if (line.StartsWith("ECID: "))
-                            {
-                                deviceInfo["ECID"] = line.Remove(0, 5).Trim().TrimStart('0').TrimStart('x').TrimStart('0').ToUpper();
-                            }
-                            else if (line.StartsWith("SRNM: "))
-                            {
-                                deviceInfo["Serial Number"] = line.Remove(0, 5).Trim();
-                            }
+                            deviceInfo["ECID"] = line.Remove(0, 5).Trim().TrimStart('0').TrimStart('x').TrimStart('0').ToUpper();
+                        }
+                        else if (line.StartsWith("SRNM: "))
+                        {
+                            deviceInfo["Serial Number"] = line.Remove(0, 5).Trim();
                         }
                     }
+                }
 
-                        deviceInfoListView.ItemsSource = deviceInfo;
-                    break;
+                deviceInfoListView.ItemsSource = deviceInfo;
 
-                case 2:
-                    deviceInfoGroupBox.Header = "DFU Mode";
-                    recoveryModeToggleButton.Content = "-------";
-                    recoveryModeToggleButton.IsEnabled = false;
-                    powerOffDeviceButton.IsEnabled = false;
-                    rebootDeviceButton.IsEnabled = false;
-                    break;
-
-                case 3:
-                    // hide things that wont work without a device
-                    waitingForDeviceLabel.Visibility = Visibility.Hidden;
-                    ensureTrustedLabel.Visibility = Visibility.Hidden;
-                    continueWithoutDeviceButton.Visibility = Visibility.Hidden;
-
-                    deviceInfoTab.Visibility = Visibility.Hidden;
-                    appsTab.Visibility = Visibility.Hidden;
-                    fileSystemTab.Visibility = Visibility.Hidden;
-                    jailbreakTab.Visibility = Visibility.Hidden;
-                    restoreTab.Visibility = Visibility.Hidden;
-
-                    mainTabControl.SelectedItem = settingsTab;
-                    break;
-
-                default:
-                    // uhhh
-                    throw new ArgumentOutOfRangeException();
+                appsTab.Visibility = Visibility.Hidden;
+                fileSystemTab.Visibility = Visibility.Hidden;
+                jailbreakTab.Visibility = Visibility.Hidden;
+                restoreTab.Visibility = Visibility.Hidden;
             }
+            else if (dfuConnected)
+            {
+                deviceInfoGroupBox.Header = "DFU Mode";
+                recoveryModeToggleButton.Content = "-------";
+                recoveryModeToggleButton.IsEnabled = false;
+                powerOffDeviceButton.IsEnabled = false;
+                rebootDeviceButton.IsEnabled = false;
 
+                appsTab.Visibility = Visibility.Hidden;
+                fileSystemTab.Visibility = Visibility.Hidden;
+                jailbreakTab.Visibility = Visibility.Hidden;
+                restoreTab.Visibility = Visibility.Hidden;
+            }
+            if (!recoveryConnected && !normalConnected && !dfuConnected)
+            {
+                // hide things that wont work without a device
+                deviceInfoTab.Visibility = Visibility.Hidden;
+                appsTab.Visibility = Visibility.Hidden;
+                fileSystemTab.Visibility = Visibility.Hidden;
+                jailbreakTab.Visibility = Visibility.Hidden;
+                restoreTab.Visibility = Visibility.Hidden;
+
+                mainTabControl.SelectedItem = settingsTab;
+            }
 
             mainTabControl.Visibility = Visibility.Visible;
         }
@@ -285,14 +333,10 @@ namespace iSuite
         {
             themeSettingComboBox.SelectedItem = options.theme;
             fwJsonSourceTextBox.Text = options.fwjsonsource;
-            repoListBox.Items.Clear();
-            foreach (string repoUrl in options.packageManagerRepos)
-            {
-                repoListBox.Items.Add(repoUrl);
-            }
+            repoListBox.ItemsSource = options.packageManagerRepos;
         }
 
-        private void installNewAppButton_Click(object sender, RoutedEventArgs e)
+        private async void installNewAppButton_Click(object sender, RoutedEventArgs e)
         {
             var openIPAFile = new Microsoft.Win32.OpenFileDialog();
             openIPAFile.FileName = "app";
@@ -301,8 +345,93 @@ namespace iSuite
 
             openIPAFile.ShowDialog();
 
-            string ipaPath = openIPAFile.FileName;
+            ipaPath = openIPAFile.FileName;
 
+            appInstallStatusListBox.Items.Clear();
+
+            appInstallStatusListBox.Items.Add($"Attempting install of {ipaPath}");
+            await Task.Run(new Action(InstallAppThread));
+        }
+
+        private void InstallAppThread()
+        {
+            var proc = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "runtimes/win-x86/native/ideviceinstaller.exe",
+                    Arguments = $"-u {deviceUUID} --install \"{ipaPath}\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+            proc.Start();
+            while (!proc.StandardOutput.EndOfStream && !proc.StandardError.EndOfStream)
+            {
+                string line = proc.StandardOutput.ReadLine();
+                if (line == null || line.Trim() == "") line = proc.StandardError.ReadLine();
+                Dispatcher.Invoke(() =>
+                {
+                    appInstallStatusListBox.Items.Add(line);
+                });
+            }
+            if (!proc.HasExited) proc.Kill();
+        }
+
+        private void GetAppsThread()
+        {
+            var proc = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "runtimes/win-x86/native/ideviceinstaller.exe",
+                    Arguments = $"-u {deviceUUID} -l",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+            proc.Start();
+            while (!proc.StandardOutput.EndOfStream)
+            {
+                string line = proc.StandardOutput.ReadLine();
+                if (line == null || line.Trim() == "" || line.Contains("CFBundleIdentifier, CFBundleVersion, CFBundleDisplayName")) continue;
+                apps.Add(new DeviceApp()
+                {
+                    CFBundleIdentifier = line.Split(',')[0],
+                    CFBundleVersion = line.Split(',')[1].Trim().Replace("\"", ""),
+                    CFBundleDisplayName = line.Split(',')[2].Trim().Replace("\"", ""),
+                });
+            }
+            if (!proc.HasExited) proc.Kill();
+        }
+
+        private void RestoreThread()
+        {
+            var proc = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = $"{dataLocation}bin/futurerestore-v194.exe",
+                    Arguments = $"--latest-baseband \"{ipswPath}\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+            proc.Start();
+            while (!proc.StandardOutput.EndOfStream && !proc.StandardError.EndOfStream)
+            {
+                string line = proc.StandardOutput.ReadLine();
+                if (line == null || line.Trim() == "") line = proc.StandardError.ReadLine();
+                Dispatcher.Invoke(() =>
+                {
+                    restoreStatusListBox.Items.Add(line);
+                });
+            }
         }
 
         private async void refreshFirmwareButton_Click(object sender, RoutedEventArgs e)
@@ -315,15 +444,15 @@ namespace iSuite
             firmwareListView.ItemsSource = fws["devices"][deviceInfo["Identifier"]]["firmwares"];
         }
 
-        private void restoreFirmwareButton_Click(object sender, RoutedEventArgs e)
+        private async void restoreFirmwareButton_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show("Restoring your device will erase ALL information\nPlease ensure that you are signed out of iCloud/Find My is disabled\nContinue?", "WARNING!", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
             if (firmwareListView.SelectedItem == null)
             {
-                MessageBox.Show("Please select a firmware");
+                restoreStatusListBox.Items.Add("Please select a firmware");
                 return;
             }
-            Firmware selectedFW = JsonConvert.DeserializeObject<Firmware>(((JObject)((ListViewItem)firmwareListView.SelectedItem).Content).ToString());
+            Firmware selectedFW = JsonConvert.DeserializeObject<Firmware>(((JObject)firmwareListView.SelectedItem).ToString());
             if (selectedFW.version.StartsWith("1.") || selectedFW.version.StartsWith("2."))
             {
                 MessageBox.Show("Restoring to iOS 1 and 2 is not supported.", "Error!");
@@ -331,13 +460,30 @@ namespace iSuite
             }
             if (!selectedFW.signed)
             {
-                if (MessageBox.Show("This firmware is (probably) not signed, restoring will most likely fail.\nContinue?", "WARNING!", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+                restoreStatusListBox.Items.Add("This firmware is (probably) not signed, restoring will most likely fail.");
             }
+            if (!File.Exists($"{dataLocation}IPSW/{selectedFW.filename}"))
+            {
+                restoreStatusListBox.Items.Add($"Downloading iOS {selectedFW.version} for {deviceInfo["Identifier"]}");
+                using (WebClient wc = new())
+                {
+                    wc.DownloadFile(new Uri(selectedFW.url), $"{dataLocation}IPSW/{selectedFW.filename}");
+                }
+                restoreStatusListBox.Items.Add($"Download complete.");
+            }
+            if (Util.CalculateMD5($"{dataLocation}IPSW/{selectedFW.filename}") != selectedFW.md5sum)
+            {
+                restoreStatusListBox.Items.Add("File hash verification failed.");
+                return;
+            }
+            ipswPath = $"{dataLocation}IPSW/{selectedFW.filename}";
+            await Task.Run(new Action(RestoreThread));
+            MessageBox.Show("Please restart the application.");
         }
 
         private async void continueWithoutDeviceButton_Click(object sender, RoutedEventArgs e)
         {
-            await Init(3);
+            await Init();
         }
 
         private void resetSettingsButton_Click(object sender, RoutedEventArgs e)
@@ -514,16 +660,15 @@ namespace iSuite
                 p.Start();
                 p.WaitForExit();
             }
+            MessageBox.Show("Please restart the application.");
         }
 
         private void recoveryModeToggleButton_Click(object sender, RoutedEventArgs e)
         {
-            if (mode == 0)
+            if (normalConnected)
             {
                 lockdown.lockdownd_enter_recovery(lockdownHandle);
-                MainWindow w = new();
-                w.Show();
-                Close();
+                MessageBox.Show("Please restart the application.");
             }
             else
             {
@@ -535,9 +680,7 @@ namespace iSuite
                     p.Start();
                     p.WaitForExit();
                 }
-                MainWindow w = new();
-                w.Show();
-                Close();
+                MessageBox.Show("Please restart the application.");
             }
         }
 
@@ -556,12 +699,53 @@ namespace iSuite
                 p.Start();
                 p.WaitForExit();
             }
+            MessageBox.Show("Please restart the application.");
         }
 
         private void Window_ContentRendered(object sender, EventArgs e)
         {
             MinWidth = 1000;
             MinHeight = 700;
+        }
+
+        private async void refreshAppListButton_Click(object sender, RoutedEventArgs e)
+        {
+            await Task.Run(new Action(GetAppsThread));
+            installedAppsListView.ItemsSource = apps;
+        }
+
+        private void afcGoButton_Click(object sender, RoutedEventArgs e)
+        {
+            afcPath = afcPathTextBox.Text;
+            try
+            {
+                afc.afc_read_directory(afcHandle, afcPath, out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
+                afcListBox.ItemsSource = afcDirectory;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void afcListBox_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if ((string)afcListBox.SelectedItem == ".") return;
+            try
+            {
+                afc.afc_read_directory(afcHandle, afcPath + $"/{afcListBox.SelectedItem}/", out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
+                if ((string)afcListBox.SelectedItem == "..")
+                {
+
+                }
+                afcPath += $"{afcListBox.SelectedItem}/";
+                afcListBox.ItemsSource = afcDirectory;
+                afcPathTextBox.Text = afcPath;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }
