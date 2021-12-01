@@ -167,7 +167,7 @@ namespace iSuite
                     deviceUUID = udids[0];
                     ret.ThrowOnError();
                     idevice.idevice_new(out deviceHandle, udids[0]).ThrowOnError();
-                    lockdown.lockdownd_client_new_with_handshake(deviceHandle, out lockdownHandle, "iSuite").ThrowOnError();
+                    lockdown.lockdownd_client_new_with_handshake(deviceHandle, out lockdownHandle, "iSuite");
                     lockdown.lockdownd_start_service(lockdownHandle, "com.apple.afc", out lockdownServiceHandle);
                     lockdownHandle.Api.Afc.afc_client_new(deviceHandle, lockdownServiceHandle, out afcHandle);
                     dfuConnected = false;
@@ -220,7 +220,7 @@ namespace iSuite
                 catch { }
                 deviceInfo["MAC Address"] = Util.GetLockdowndStringKey(lockdownHandle, null, "WiFiAddress").ToUpper();
                 deviceInfo["UUID"] = deviceUUID;
-                deviceInfo["Activated"] = (Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState") == "Activated").ToString();
+                deviceInfo["Activated"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState");
 
                 deviceTotalDiskCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDiskCapacity");
                 deviceTotalSystemCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemCapacity");
@@ -242,6 +242,8 @@ namespace iSuite
 
                 systemStorageProgressBar.Value = (int)((deviceTotalSystemCapacity - deviceTotalSystemAvailable) / 10000000);
                 dataStorageProgressBar.Value = (int)((deviceTotalDataCapacity - deviceTotalDataAvailable) / 10000000);
+
+                deviceInfo["Capacity"] = Util.FormatBytes(deviceTotalDiskCapacity);
 
                 deviceInfoListView.ItemsSource = deviceInfo;
 

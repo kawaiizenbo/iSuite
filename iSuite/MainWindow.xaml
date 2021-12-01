@@ -17,19 +17,19 @@
                 <Grid Background="#FFE5E5E5">
                     <GroupBox x:Name="deviceInfoGroupBox" Header="Loading...">
                         <Grid>
-                            <GroupBox x:Name="deviceStorageGroupBox" Header="Device Storage (0B Total)" Margin="10,0,10,10" Height="100" VerticalAlignment="Bottom">
+                            <GroupBox x:Name="deviceStorageGroupBox" Header="Device Storage (0B Total)" Margin="450,0,10,95" Height="140" VerticalAlignment="Bottom">
                                 <Grid>
                                     <Label x:Name="systemStorageLabel" Content="System (0B Total)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"/>
-                                    <Label x:Name="systemStorageFreeLabel" Content="0B Free" HorizontalAlignment="Left" Margin="10,51,0,0" VerticalAlignment="Top"/>
-                                    <ProgressBar x:Name="systemStorageProgressBar" Margin="10,26,477,26" SmallChange="1" Foreground="#FF06B0A8"/>
-                                    <Label x:Name="dataStorageLabel" Content="Data (0B Free)" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,10,0"/>
-                                    <Label x:Name="dataStorageFreeLabel" Content="0B Free" Grid.Column="1" HorizontalAlignment="Right" Margin="0,51,10,0" VerticalAlignment="Top"/>
-                                    <ProgressBar x:Name="dataStorageProgressBar" SmallChange="1" Foreground="#FF06B0A8" Margin="477,26,10,26"/>
+                                    <Label x:Name="systemStorageFreeLabel" Content="0B Free" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                                    <ProgressBar x:Name="systemStorageProgressBar" Margin="10,26,10,26" SmallChange="1" Foreground="#FF06B0A8" VerticalAlignment="Top" Height="25"/>
+                                    <Label x:Name="dataStorageLabel" Content="Data (0B Free)" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,35"/>
+                                    <Label x:Name="dataStorageFreeLabel" Content="0B Free" HorizontalAlignment="Right" Margin="0,0,10,35" VerticalAlignment="Bottom"/>
+                                    <ProgressBar x:Name="dataStorageProgressBar" SmallChange="1" Foreground="#FF06B0A8" Margin="10,0,10,10" Height="25" VerticalAlignment="Bottom"/>
                                 </Grid>
                             </GroupBox>
-                            <GroupBox Header="Device Information" Margin="10,10,0,115" HorizontalAlignment="Left" Width="435">
+                            <GroupBox Header="Device Information" Margin="10,10,0,10" HorizontalAlignment="Left" Width="435">
                                 <Grid>
-                                    <ListView x:Name="deviceInfoListView" MouseDoubleClick="deviceInfoListView_MouseDoubleClick" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Stretch" Margin="5,5,5,7">
+                                    <ListView x:Name="deviceInfoListView" MouseDoubleClick="deviceInfoListView_MouseDoubleClick" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Stretch" Margin="5,5,5,5">
                                         <ListView.View>
                                             <GridView>
                                                 <GridViewColumn Header="Key" Width="100" DisplayMemberBinding="{Binding Key}"/>
@@ -39,7 +39,7 @@
                                     </ListView>
                                 </Grid>
                             </GroupBox>
-                            <GroupBox Header="Operations" Margin="450,0,10,115" Height="80" VerticalAlignment="Bottom">
+                            <GroupBox Header="Operations" Margin="450,0,10,10" Height="80" VerticalAlignment="Bottom">
                                 <Grid>
                                     <Button x:Name="powerOffDeviceButton" Content="Power Off" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Width="160" Height="35" Click="powerOffDeviceButton_Click"/>
                                     <Button x:Name="rebootDeviceButton" Content="Reboot" HorizontalAlignment="Center" VerticalAlignment="Center" Width="160" Height="35" Click="rebootDeviceButton_Click"/>
