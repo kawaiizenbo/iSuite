@@ -72,6 +72,7 @@
                     <TextBox x:Name="afcPathTextBox" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="240" Height="20"/>
                     <Button x:Name="afcGoButton" Content="Go" HorizontalAlignment="Left" Margin="255,10,0,0" VerticalAlignment="Top" Height="20" Width="30" Click="afcGoButton_Click"/>
                     <ListBox x:Name="afcListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,35,10,10" MouseDoubleClick="afcListBox_MouseDoubleClick"/>
+                    <Button x:Name="afcUploadFileButton" Content="Upload File" HorizontalAlignment="Left" Margin="290,10,0,0" VerticalAlignment="Top" Height="20" Width="75" Click="afcUploadFileButton_Click"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="120">

@@ -335,7 +335,11 @@ namespace iSuite
         {
             themeSettingComboBox.SelectedItem = options.theme;
             fwJsonSourceTextBox.Text = options.fwjsonsource;
-            repoListBox.ItemsSource = options.packageManagerRepos;
+            foreach(string s in options.packageManagerRepos)
+            {
+                repoListBox.Items.Add(s);
+            }
+            
         }
 
         private async void installNewAppButton_Click(object sender, RoutedEventArgs e)
@@ -748,6 +752,16 @@ namespace iSuite
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        private void afcUploadFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            var openAfcUploadFile = new Microsoft.Win32.OpenFileDialog();
+
+            openAfcUploadFile.ShowDialog();
+
+            string afcUploadFile = openAfcUploadFile.FileName;
+
         }
     }
 }
