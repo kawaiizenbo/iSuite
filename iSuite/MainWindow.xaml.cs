@@ -651,7 +651,15 @@ namespace iSuite
             {
                 using (StreamWriter outputFile = new StreamWriter(saveDebPath))
                 {
-                    outputFile.WriteLine(await wc.GetStreamAsync(link));
+                    try
+                    {
+                        outputFile.WriteLine(await wc.GetStreamAsync(link));
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
+                    MessageBox.Show("Download complete.");
                 }
             }
         }
