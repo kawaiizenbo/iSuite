@@ -48,9 +48,10 @@ namespace iSuite
 
         private string ipaPath;
         private string afcPath = "/";
-        private string ipswPath;
+        //private string ipswPath;
 
         private Dictionary<string, string> deviceInfo = new();
+        private Dictionary<string, string> batteryInfo = new();
         private List<DeviceApp> apps = new();
         private ulong deviceUniqueChipID = 0; // ecid
         private string deviceUUID;
@@ -229,12 +230,18 @@ namespace iSuite
                 deviceInfo["UUID"] = deviceUUID;
                 deviceInfo["Activated"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState");
 
+                // storage
                 deviceTotalDiskCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDiskCapacity");
                 deviceTotalSystemCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemCapacity");
                 deviceTotalDataCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataCapacity");
                 deviceTotalSystemAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemAvailable");
                 deviceTotalDataAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataAvailable");
 
+                // battery
+                batteryInfo["Current Capacity"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.battery", "BatteryCurrentCapacity").ToString() + "%";
+                
+
+                // put them on the controls
                 if (onlineFlag) deviceInfoGroupBox.Header = fws["device"][deviceInfo["Identifier"]]["name"];
                 else deviceInfoGroupBox.Header = deviceInfo["Identifier"];
 
@@ -255,6 +262,7 @@ namespace iSuite
                 deviceInfo["Capacity"] = Util.FormatBytes(deviceTotalDiskCapacity);
 
                 deviceInfoListView.ItemsSource = deviceInfo;
+                batteryInfoListView.ItemsSource = batteryInfo;
 
                 // get apps
                 await Task.Run(new Action(GetAppsThread));

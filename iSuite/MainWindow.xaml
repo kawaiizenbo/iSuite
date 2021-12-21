@@ -46,6 +46,18 @@
                                     <Button x:Name="recoveryModeToggleButton" Content="Enter Recovery" HorizontalAlignment="Right" VerticalAlignment="Center" Height="35" Width="160" Click="recoveryModeToggleButton_Click" Margin="0,0,10,0"/>
                                 </Grid>
                             </GroupBox>
+                            <GroupBox Header="Battery Information" Margin="450,10,10,240">
+                                <Grid>
+                                    <ListView x:Name="batteryInfoListView" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,10,10,10">
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridViewColumn Header="Key" Width="100" DisplayMemberBinding="{Binding Key}"/>
+                                                <GridViewColumn Header="Value" Width="300" DisplayMemberBinding="{Binding Value}"/>
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                </Grid>
+                            </GroupBox>
                         </Grid>
                     </GroupBox>
                 </Grid>
