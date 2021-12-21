@@ -50,9 +50,9 @@ namespace iSuite
         private string afcPath = "/";
         //private string ipswPath;
 
-        private Dictionary<string, string> deviceInfo = new();
-        private Dictionary<string, string> batteryInfo = new();
-        private List<DeviceApp> apps = new();
+        private Dictionary<string, string> deviceInfo = new Dictionary<string, string>();
+        private Dictionary<string, string> batteryInfo = new Dictionary<string, string>();
+        private List<DeviceApp> apps = new List<DeviceApp>();
         private ulong deviceUniqueChipID = 0; // ecid
         private string deviceUUID;
 
@@ -99,7 +99,7 @@ namespace iSuite
             options = JsonConvert.DeserializeObject<OptionsJson>(File.ReadAllText(dataLocation + "options.json"));
             if (options.packageManagerRepos == null)
             {
-                options.packageManagerRepos = new() { "http://repo.kawaiizenbo.me/", "http://cydia.invoxiplaygames.uk/" };
+                options.packageManagerRepos = new List<string>() { "http://repo.kawaiizenbo.me/", "http://cydia.invoxiplaygames.uk/" };
             }
             usb.Source = Util.BitmapToImageSource(iSuite.Resources.usb);
             LoadSettingsToControls();
@@ -109,7 +109,7 @@ namespace iSuite
             mainTabControl.Visibility = Visibility.Hidden;
 
             // murder
-            using (Process p = new())
+            using (Process p = new Process())
             {
                 p.StartInfo.FileName = "taskkill";
                 p.StartInfo.Arguments = "/f /im iTunes.exe";
@@ -185,7 +185,7 @@ namespace iSuite
         {
             try
             {
-                using (HttpClient wc = new())
+                using (HttpClient wc = new HttpClient())
                 {
                     File.WriteAllText(dataLocation + "fws.json", await wc.GetStringAsync(options.fwjsonsource));
                     fws = JObject.Parse(await File.ReadAllTextAsync(dataLocation + "fws.json"));
@@ -291,7 +291,7 @@ namespace iSuite
                 rebootDeviceButton.IsEnabled = false;
 
                 // awful
-                using (Process p = new())
+                using (Process p = new Process())
                 {
                     p.StartInfo.FileName = "runtimes/win-x86/native/irecovery.exe";
                     p.StartInfo.Arguments = "-q";
@@ -549,7 +549,7 @@ namespace iSuite
         {
             if (repoListBox.SelectedItem.ToString() == null) return;
             string link = repoListBox.SelectedItem.ToString();
-            HttpClient webClient = new();
+            HttpClient webClient = new HttpClient();
             // headers because some repos are 'interesting'
             webClient.DefaultRequestHeaders.Add("X-Machine", "iPod4,1");
             webClient.DefaultRequestHeaders.Add("X-Unique-ID", "0000000000000000000000000000000000000000");
@@ -667,7 +667,7 @@ namespace iSuite
             {
                 link = packagesLVGB.Header + link;
             }
-            using (WebClient wc = new())
+            using (WebClient wc = new WebClient())
             {
                 wc.DownloadFileAsync(new Uri(link), saveDebPath);
             }
@@ -675,7 +675,7 @@ namespace iSuite
 
         private void powerOffDeviceButton_Click(object sender, RoutedEventArgs e)
         {
-            using (Process p = new())
+            using (Process p = new Process())
             {
                 p.StartInfo.FileName = "runtimes/win-x86/native/idevicediagnostics.exe";
                 p.StartInfo.Arguments = "shutdown";
@@ -695,7 +695,7 @@ namespace iSuite
             }
             else
             {
-                using (Process p = new())
+                using (Process p = new Process())
                 {
                     p.StartInfo.FileName = "runtimes/win-x86/native/irecovery.exe";
                     p.StartInfo.Arguments = "-n";
@@ -715,7 +715,7 @@ namespace iSuite
 
         private void rebootDeviceButton_Click(object sender, RoutedEventArgs e)
         {
-            using (Process p = new())
+            using (Process p = new Process())
             {
                 p.StartInfo.FileName = "runtimes/win-x86/native/idevicediagnostics.exe";
                 p.StartInfo.Arguments = "restart";
@@ -799,7 +799,7 @@ namespace iSuite
 
         private void afcMKDirButton_Click(object sender, RoutedEventArgs e)
         {
-            GenericSingleInputForm f = new();
+            GenericSingleInputForm f = new GenericSingleInputForm();
             f.Title = "Make Directory";
             f.LabelText = "Please enter the name for the new directory.";
             f.ShowDialog();
