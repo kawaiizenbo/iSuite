@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -33,6 +34,7 @@ namespace iSuite
         private AfcClientHandle afcHandle;
 
         private JObject fws;
+        private bool onlineFlag = true;
 
         private bool shouldStopDetecting = false;
 
@@ -43,7 +45,6 @@ namespace iSuite
         private string dataLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/iSuite/";
 
         private OptionsJson options;
-        private JailbreakJson jailbreaks;
 
         private string ipaPath;
         private string afcPath = "/";
@@ -90,10 +91,10 @@ namespace iSuite
             {
                 File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(new OptionsJson()));
             }
-            if (!File.Exists($"{dataLocation}bin/futurerestore-v194.exe"))
-            {
-                File.WriteAllBytes($"{dataLocation}bin/futurerestore-v194.exe", iSuite.Resources.futurerestore_v194);
-            }
+            //if (!File.Exists($"{dataLocation}bin/futurerestore-v194.exe")) (removed until fr beta comes out for win)
+            //{
+            //    File.WriteAllBytes($"{dataLocation}bin/futurerestore-v194.exe", iSuite.Resources.futurerestore_v194);
+            //}
             options = JsonConvert.DeserializeObject<OptionsJson>(File.ReadAllText(dataLocation + "options.json"));
             if (options.packageManagerRepos == null)
             {
@@ -181,11 +182,17 @@ namespace iSuite
 
         private async Task Init()
         {
-
-            using (HttpClient wc = new())
+            try
             {
-                File.WriteAllText(dataLocation + "fws.json", await wc.GetStringAsync(options.fwjsonsource));
-                fws = JObject.Parse(await File.ReadAllTextAsync(dataLocation + "fws.json"));
+                using (HttpClient wc = new())
+                {
+                    File.WriteAllText(dataLocation + "fws.json", await wc.GetStringAsync(options.fwjsonsource));
+                    fws = JObject.Parse(await File.ReadAllTextAsync(dataLocation + "fws.json"));
+                }
+            }
+            catch (Exception)
+            {
+                onlineFlag = false;
             }
 
             if (normalConnected)
@@ -228,7 +235,9 @@ namespace iSuite
                 deviceTotalSystemAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemAvailable");
                 deviceTotalDataAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataAvailable");
 
-                deviceInfoGroupBox.Header = fws["devices"][deviceInfo["Identifier"]]["name"];
+                if (onlineFlag) deviceInfoGroupBox.Header = fws["device"][deviceInfo["Identifier"]]["name"];
+                else deviceInfoGroupBox.Header = deviceInfo["Identifier"];
+
                 deviceStorageGroupBox.Header = $"Device Storage ({Util.FormatBytes(deviceTotalDiskCapacity)} Total)";
 
                 systemStorageLabel.Content = $"System ({Util.FormatBytes(deviceTotalSystemCapacity)} Total)";
@@ -251,8 +260,8 @@ namespace iSuite
                 await Task.Run(new Action(GetAppsThread));
                 installedAppsListView.ItemsSource = apps;
 
-                // load fs to listbox
-                firmwareListView.ItemsSource = fws["devices"][deviceInfo["Identifier"]]["firmwares"];
+                // load fs to listbox (do not)
+                //firmwareListView.ItemsSource = fws["devices"][deviceInfo["Identifier"]]["firmwares"];
 
                 // afc
                 afcPathTextBox.Text = afcPath;
@@ -300,8 +309,8 @@ namespace iSuite
 
                 appsTab.Visibility = Visibility.Hidden;
                 fileSystemTab.Visibility = Visibility.Hidden;
-                jailbreakTab.Visibility = Visibility.Hidden;
-                restoreTab.Visibility = Visibility.Hidden;
+                //jailbreakTab.Visibility = Visibility.Hidden;
+                //restoreTab.Visibility = Visibility.Hidden;
             }
             else if (dfuConnected)
             {
@@ -313,8 +322,8 @@ namespace iSuite
 
                 appsTab.Visibility = Visibility.Hidden;
                 fileSystemTab.Visibility = Visibility.Hidden;
-                jailbreakTab.Visibility = Visibility.Hidden;
-                restoreTab.Visibility = Visibility.Hidden;
+                //jailbreakTab.Visibility = Visibility.Hidden;
+                //restoreTab.Visibility = Visibility.Hidden;
             }
             if (!recoveryConnected && !normalConnected && !dfuConnected)
             {
@@ -322,8 +331,8 @@ namespace iSuite
                 deviceInfoTab.Visibility = Visibility.Hidden;
                 appsTab.Visibility = Visibility.Hidden;
                 fileSystemTab.Visibility = Visibility.Hidden;
-                jailbreakTab.Visibility = Visibility.Hidden;
-                restoreTab.Visibility = Visibility.Hidden;
+                //jailbreakTab.Visibility = Visibility.Hidden;
+                //restoreTab.Visibility = Visibility.Hidden;
 
                 mainTabControl.SelectedItem = settingsTab;
             }
@@ -383,7 +392,10 @@ namespace iSuite
                     appInstallStatusListBox.Items.Add(line);
                 });
             }
-            if (!proc.HasExited) proc.Kill();
+            Dispatcher.Invoke(() =>
+            {
+                appInstallStatusListBox.Items.Add("(Should be) done.");
+            });
         }
 
         private void GetAppsThread()
@@ -400,6 +412,7 @@ namespace iSuite
                 }
             };
             proc.Start();
+            apps.Clear();
             while (!proc.StandardOutput.EndOfStream)
             {
                 string line = proc.StandardOutput.ReadLine();
@@ -413,7 +426,7 @@ namespace iSuite
             }
             if (!proc.HasExited) proc.Kill();
         }
-
+        /* disabled
         private void RestoreThread()
         {
             var proc = new Process
@@ -486,7 +499,7 @@ namespace iSuite
             await Task.Run(new Action(RestoreThread));
             MessageBox.Show("Please restart the application.");
         }
-
+        */
         private async void continueWithoutDeviceButton_Click(object sender, RoutedEventArgs e)
         {
             await Init();
@@ -629,7 +642,7 @@ namespace iSuite
             repoListBox.Items.Remove(repoListBox.SelectedItem);
         }
 
-        private async void packagesListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void packagesListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             var saveDebFile = new Microsoft.Win32.SaveFileDialog();
             saveDebFile.FileName = $"{((DebPackage)packagesListView.SelectedItem).Package}-{((DebPackage)packagesListView.SelectedItem).Version}.deb";
@@ -646,21 +659,9 @@ namespace iSuite
             {
                 link = packagesLVGB.Header + link;
             }
-
-            using (HttpClient wc = new())
+            using (WebClient wc = new())
             {
-                using (StreamWriter outputFile = new StreamWriter(saveDebPath))
-                {
-                    try
-                    {
-                        outputFile.WriteLine(await wc.GetStreamAsync(link));
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                    }
-                    MessageBox.Show("Download complete.");
-                }
+                wc.DownloadFileAsync(new Uri(link), saveDebPath);
             }
         }
 
@@ -700,7 +701,8 @@ namespace iSuite
 
         private void aboutButton_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("https://kawaiizenbo.me/abtis.html");
+            MessageBox.Show("iSuite Public Beta by KawaiiZenbo\nBased on LibiMobileDevice", "About iSuite");
+            //Process.Start("https://kawaiizenbo.me/abtis.html"); this file does not exist right now
         }
 
         private void rebootDeviceButton_Click(object sender, RoutedEventArgs e)
@@ -716,16 +718,10 @@ namespace iSuite
             MessageBox.Show("Please restart the application.");
         }
 
-        private void Window_ContentRendered(object sender, EventArgs e)
-        {
-            MinWidth = 1000;
-            MinHeight = 700;
-        }
-
         private async void refreshAppListButton_Click(object sender, RoutedEventArgs e)
         {
             await Task.Run(new Action(GetAppsThread));
-            installedAppsListView.ItemsSource = apps;
+            installedAppsListView.Items.Refresh();
         }
 
         private void afcGoButton_Click(object sender, RoutedEventArgs e)
@@ -768,8 +764,38 @@ namespace iSuite
 
             openAfcUploadFile.ShowDialog();
 
-            string afcUploadFile = openAfcUploadFile.FileName;
+            string afcUploadFilePath = openAfcUploadFile.FileName;
 
+            string afcUploadFileName = afcUploadFilePath.Split('\\').Last();
+
+            ulong handle = 0UL;
+            this.afc.afc_file_open(afcHandle, afcPath + "/" + afcUploadFileName, AfcFileMode.FopenRw, ref handle);
+            byte[] array = File.ReadAllBytes(afcUploadFilePath);
+            uint bytesWritten = 0U;
+            this.afc.afc_file_write(afcHandle, handle, array, (uint)array.Length, ref bytesWritten);
+            this.afc.afc_file_close(afcHandle, handle);
+        }
+
+        private void afcRefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                afc.afc_read_directory(afcHandle, afcPath, out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
+                afcListBox.ItemsSource = afcDirectory;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void afcMKDirButton_Click(object sender, RoutedEventArgs e)
+        {
+            GenericSingleInputForm f = new();
+            f.Title = "Make Directory";
+            f.LabelText = "Please enter the name for the new directory.";
+            f.ShowDialog();
+            afc.afc_make_directory(afcHandle, afcPath + "/" + f.TextBoxContents);
         }
     }
 }

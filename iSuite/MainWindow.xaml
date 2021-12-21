@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:iSuite"
         xmlns:System="clr-namespace:System;assembly=System.Runtime" x:Class="iSuite.MainWindow"
         mc:Ignorable="d"
-        Title="iSuite" Height="700" Width="1000" ResizeMode="CanMinimize" Loaded="Window_Loaded" ContentRendered="Window_ContentRendered">
+        Title="iSuite" Height="700" Width="1000" ResizeMode="CanMinimize" Loaded="Window_Loaded">
     <Grid>
         <Label x:Name="waitingForDeviceLabel" Content="Waiting for device..." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="36" Margin="0,0,0,100"/>
         <Label x:Name="ensureTrustedLabel" Content="Please ensure device is connected and trusted." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18"/>
@@ -54,7 +54,13 @@
                 <Grid Background="#FFE5E5E5">
                     <Button x:Name="installNewAppButton" Content="Install New" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="25" Width="75" Click="installNewAppButton_Click"/>
                     <Label Content="Installing apps requires AppSync from cydia.akemi.ai on iOS 4-14 or from ios3.party on iOS 3.1-3.2" HorizontalAlignment="Left" Margin="130,0,0,10" VerticalAlignment="Bottom" FontSize="10"/>
-                    <ListBox x:Name="appInstallStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,10,10,10" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="320"/>
+                    <ListBox x:Name="appInstallStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,10,10,10" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="320" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                     <ListView x:Name="installedAppsListView" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,10,335,41">
                         <ListView.View>
                             <GridView>
@@ -72,10 +78,12 @@
                     <TextBox x:Name="afcPathTextBox" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="240" Height="20"/>
                     <Button x:Name="afcGoButton" Content="Go" HorizontalAlignment="Left" Margin="255,10,0,0" VerticalAlignment="Top" Height="20" Width="30" Click="afcGoButton_Click"/>
                     <ListBox x:Name="afcListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,35,10,10" MouseDoubleClick="afcListBox_MouseDoubleClick"/>
-                    <Button x:Name="afcUploadFileButton" Content="Upload File" HorizontalAlignment="Left" Margin="290,10,0,0" VerticalAlignment="Top" Height="20" Width="75" Click="afcUploadFileButton_Click"/>
+                    <Button x:Name="afcUploadFileButton" Content="Upload File" HorizontalAlignment="Left" Margin="345,10,0,0" VerticalAlignment="Top" Height="20" Width="75" Click="afcUploadFileButton_Click"/>
+                    <Button x:Name="afcRefreshButton" Content="Refresh" HorizontalAlignment="Left" Margin="290,10,0,0" VerticalAlignment="Top" Height="20" Width="50" Click="afcRefreshButton_Click"/>
+                    <Button x:Name="afcMKDirButton" Content="Make Directory" HorizontalAlignment="Left" Margin="425,10,0,0" VerticalAlignment="Top" Height="20" Width="100" Click="afcMKDirButton_Click"/>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="120">
+            <!--<TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="120">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
             <TabItem x:Name="restoreTab" Header="Restore" Width="120">
@@ -94,7 +102,7 @@
                     <Button x:Name="restoreFirmwareButton" Content="Restore" HorizontalAlignment="Left" Margin="81,0,0,10" VerticalAlignment="Bottom" Height="33" Width="66" Click="restoreFirmwareButton_Click"/>
                     <ListBox x:Name="restoreStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,10,10,10" HorizontalAlignment="Right" Width="405"/>
                 </Grid>
-            </TabItem>
+            </TabItem>-->
             <TabItem x:Name="packageManagerTab" Header="Package Manager" Width="120">
                 <Grid Background="#FFE5E5E5">
                     <GroupBox Header="Repos" Margin="10,10,754,10">
