@@ -5,7 +5,6 @@ using iMobileDevice;
 using iMobileDevice.Afc;
 using iMobileDevice.iDevice;
 using iMobileDevice.Lockdown;
-using Microsoft.Win32.SafeHandles;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -16,7 +15,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -106,16 +105,6 @@ namespace iSuite
         {
             mainTabControl.Visibility = Visibility.Hidden;
 
-            // murder
-            using (Process p = new Process())
-            {
-                p.StartInfo.FileName = "taskkill";
-                p.StartInfo.Arguments = "/f /im iTunes.exe";
-                p.StartInfo.CreateNoWindow = true;
-                p.Start();
-                p.WaitForExit();
-            }
-
             // check for them until you dont need to check for them anymore
             await Task.Run(new Action(DeviceDetectorThread));
             await Init();
@@ -132,7 +121,7 @@ namespace iSuite
                 if (ret == iDeviceError.NoDevice || udids.Count == 0)
                 {
                     Process process = new Process();
-                    process.StartInfo.FileName = "runtimes/win-x86/native/irecovery.exe";
+                    process.StartInfo.FileName = "irecovery.exe";
                     process.StartInfo.Arguments = "-q";
                     process.StartInfo.CreateNoWindow = true;
                     process.StartInfo.UseShellExecute = false;
@@ -183,10 +172,10 @@ namespace iSuite
         {
             try
             {
-                using (HttpClient wc = new HttpClient())
+                using (WebClient wc = new WebClient())
                 {
-                    File.WriteAllText(dataLocation + "fws.json", await wc.GetStringAsync(options.fwjsonsource));
-                    fws = JObject.Parse(await File.ReadAllTextAsync(dataLocation + "fws.json"));
+                    File.WriteAllText(dataLocation + "fws.json", wc.DownloadString(new Uri(options.fwjsonsource)));
+                    fws = JObject.Parse(File.ReadAllText(dataLocation + "fws.json"));
                 }
             }
             catch (Exception)
@@ -291,7 +280,7 @@ namespace iSuite
                 // awful
                 using (Process p = new Process())
                 {
-                    p.StartInfo.FileName = "runtimes/win-x86/native/irecovery.exe";
+                    p.StartInfo.FileName = "irecovery.exe";
                     p.StartInfo.Arguments = "-q";
                     p.StartInfo.CreateNoWindow = true;
                     p.StartInfo.UseShellExecute = false;
@@ -378,7 +367,7 @@ namespace iSuite
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "runtimes/win-x86/native/ideviceinstaller.exe",
+                    FileName = "ideviceinstaller.exe",
                     Arguments = $"-u {deviceUDID} --install \"{ipaPath}\"",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -417,7 +406,7 @@ namespace iSuite
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "runtimes/win-x86/native/ideviceinstaller.exe",
+                    FileName = "ideviceinstaller.exe",
                     Arguments = $"-u {deviceUDID} --uninstall \"{selectedBundleID}\"",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -456,7 +445,7 @@ namespace iSuite
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "runtimes/win-x86/native/ideviceinstaller.exe",
+                    FileName = "ideviceinstaller.exe",
                     Arguments = $"-u {deviceUDID} -l",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -504,12 +493,12 @@ namespace iSuite
             }
         }
 
-        private async void refreshFirmwareButton_Click(object sender, RoutedEventArgs e)
+        private void refreshFirmwareButton_Click(object sender, RoutedEventArgs e)
         {
-            // oh boy hope this doesnt ever go down
-            using (HttpClient wc = new HttpClient())
+            using (WebClient wc = new WebClient())
             {
-                fws = JObject.Parse(await wc.GetStringAsync(options.fwjsonsource));
+                File.WriteAllText(dataLocation + "fws.json", wc.DownloadString(new Uri(options.fwjsonsource)));
+                fws = JObject.Parse(File.ReadAllText(dataLocation + "fws.json"));
             }
             firmwareListView.ItemsSource = fws["devices"][deviceInfo["Identifier"]]["firmwares"];
         }
@@ -575,20 +564,20 @@ namespace iSuite
             addRepoTextBox.Text = null;
         }
 
-        private async void repoListBox_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void repoListBox_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (repoListBox.SelectedItem.ToString() == null) return;
             string link = repoListBox.SelectedItem.ToString();
-            HttpClient webClient = new HttpClient();
+            WebClient webClient = new WebClient();
             // headers because some repos are 'interesting'
-            webClient.DefaultRequestHeaders.Add("X-Machine", "iPod4,1");
-            webClient.DefaultRequestHeaders.Add("X-Unique-ID", "0000000000000000000000000000000000000000");
-            webClient.DefaultRequestHeaders.Add("X-Firmware", "6.1");
-            webClient.DefaultRequestHeaders.Add("User-Agent", "Telesphoreo APT-HTTP/1.0.999");
+            webClient.Headers.Add("X-Machine", "iPod4,1");
+            webClient.Headers.Add("X-Unique-ID", "0000000000000000000000000000000000000000");
+            webClient.Headers.Add("X-Firmware", "6.1");
+            webClient.Headers.Add("User-Agent", "Telesphoreo APT-HTTP/1.0.999");
             // Attempt to download packages file (try/catch hell)
             try
             {
-                Stream packagesBz2 = await webClient.GetStreamAsync(link + "Packages.bz2");
+                MemoryStream packagesBz2 = new MemoryStream(webClient.DownloadData(link + "Packages.bz2"));
                 FileStream packagesBz2Decompressed = File.Create(dataLocation + "temp/Packages");
                 BZip2.Decompress(packagesBz2, packagesBz2Decompressed, true);
             }
@@ -596,7 +585,7 @@ namespace iSuite
             {
                 try
                 {
-                    Stream packagesGz = await webClient.GetStreamAsync(link + "Packages.gz");
+                    MemoryStream packagesGz = new MemoryStream(webClient.DownloadData(link + "Packages.bz2"));
                     FileStream packagesGzDecompressed = File.Create(dataLocation + "temp/Packages");
                     GZip.Decompress(packagesGz, packagesGzDecompressed, true);
                 }
@@ -604,10 +593,7 @@ namespace iSuite
                 {
                     try
                     {
-                        using (StreamWriter outputFile = new StreamWriter(dataLocation + "temp/Packages"))
-                        {
-                            outputFile.WriteLine(await webClient.GetStreamAsync(link + "Packages"));
-                        }
+                        webClient.DownloadFile(link + "Packages", dataLocation + "temp/Packages");
                     }
                     catch (Exception)
                     {
@@ -618,7 +604,8 @@ namespace iSuite
             Thread.Sleep(500);
             // Clean list of package links, names, and versions
             List<DebPackage> packages = new List<DebPackage>();
-            foreach (string s in File.ReadAllText(dataLocation + "temp/Packages").Split("\n\n"))
+            Regex rx = new Regex(@"\n\n+", RegexOptions.Compiled);
+            foreach (string s in rx.Split(File.ReadAllText(dataLocation + "temp/Packages")))
             {
                 string packageID = "";
                 string version = "";
@@ -707,7 +694,7 @@ namespace iSuite
         {
             using (Process p = new Process())
             {
-                p.StartInfo.FileName = "runtimes/win-x86/native/idevicediagnostics.exe";
+                p.StartInfo.FileName = "idevicediagnostics.exe";
                 p.StartInfo.Arguments = "shutdown";
                 p.StartInfo.CreateNoWindow = true;
                 p.Start();
@@ -727,7 +714,7 @@ namespace iSuite
             {
                 using (Process p = new Process())
                 {
-                    p.StartInfo.FileName = "runtimes/win-x86/native/irecovery.exe";
+                    p.StartInfo.FileName = "irecovery.exe";
                     p.StartInfo.Arguments = "-n";
                     p.StartInfo.CreateNoWindow = true;
                     p.Start();
@@ -747,7 +734,7 @@ namespace iSuite
         {
             using (Process p = new Process())
             {
-                p.StartInfo.FileName = "runtimes/win-x86/native/idevicediagnostics.exe";
+                p.StartInfo.FileName = "idevicediagnostics.exe";
                 p.StartInfo.Arguments = "restart";
                 p.StartInfo.CreateNoWindow = true;
                 p.Start();
