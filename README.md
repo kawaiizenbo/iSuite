@@ -2,8 +2,8 @@
 iOS Utility Suite for Windows
 
 ## Requirements  
- - Windows
- - .NET Core 3.1
+ - Windows 7 x86 or later
+ - .NET Framework 4.7.2
  - iOS 2 - 15 device 
  - patience
  
