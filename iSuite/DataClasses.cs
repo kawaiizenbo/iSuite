@@ -32,8 +32,8 @@ namespace iSuite
     // options.json
     public class OptionsJson
     {
-        public string theme { get; set; } = "Teal";
         public string fwjsonsource { get; set; } = "https://ios.cfw.guide/main.json";
         public List<string> packageManagerRepos { get; set; } 
     }
+
 }

@@ -29,7 +29,7 @@
                             </GroupBox>
                             <GroupBox Header="Device Information" Margin="10,10,0,10" HorizontalAlignment="Left" Width="435">
                                 <Grid>
-                                    <ListView x:Name="deviceInfoListView" MouseDoubleClick="deviceInfoListView_MouseDoubleClick" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Stretch" Margin="5,5,5,5">
+                                    <ListView x:Name="deviceInfoListView" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Stretch" Margin="5,5,5,5">
                                         <ListView.View>
                                             <GridView>
                                                 <GridViewColumn Header="Key" Width="100" DisplayMemberBinding="{Binding Key}"/>
@@ -65,7 +65,6 @@
             <TabItem x:Name="appsTab" Header="Apps" Width="120">
                 <Grid Background="#FFE5E5E5">
                     <Button x:Name="installNewAppButton" Content="Install New" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="25" Width="75" Click="installNewAppButton_Click"/>
-                    <Label Content="Installing apps requires AppSync from cydia.akemi.ai on iOS 4-14 or from ios3.party on iOS 3.1-3.2" HorizontalAlignment="Left" Margin="130,0,0,10" VerticalAlignment="Bottom" FontSize="10"/>
                     <ListBox x:Name="appInstallStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,10,10,10" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="320" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -82,23 +81,27 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <Button x:Name="refreshAppListButton" Content="&#xE117;" HorizontalAlignment="Left" Margin="90,0,0,10" VerticalAlignment="Bottom" Width="35" Height="25" FontFamily="Segoe UI Symbol" Click="refreshAppListButton_Click"/>
+                    <Button x:Name="refreshAppListButton" Content="&#xE117;" HorizontalAlignment="Left" Margin="195,0,0,10" VerticalAlignment="Bottom" Width="35" Height="25" FontFamily="Segoe UI Symbol" Click="refreshAppListButton_Click"/>
+                    <Button x:Name="removeSelectedAppButton" Content="Remove Selected" HorizontalAlignment="Left" Margin="90,0,0,10" VerticalAlignment="Bottom" Width="100" Height="25" Click="removeSelectedAppButton_Click"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="fileSystemTab" Header="File System" Width="120">
                 <Grid Background="#FFE5E5E5">
                     <TextBox x:Name="afcPathTextBox" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="240" Height="20"/>
                     <Button x:Name="afcGoButton" Content="Go" HorizontalAlignment="Left" Margin="255,10,0,0" VerticalAlignment="Top" Height="20" Width="30" Click="afcGoButton_Click"/>
-                    <ListBox x:Name="afcListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,35,10,10" MouseDoubleClick="afcListBox_MouseDoubleClick"/>
-                    <Button x:Name="afcUploadFileButton" Content="Upload File" HorizontalAlignment="Left" Margin="345,10,0,0" VerticalAlignment="Top" Height="20" Width="75" Click="afcUploadFileButton_Click"/>
-                    <Button x:Name="afcRefreshButton" Content="Refresh" HorizontalAlignment="Left" Margin="290,10,0,0" VerticalAlignment="Top" Height="20" Width="50" Click="afcRefreshButton_Click"/>
-                    <Button x:Name="afcMKDirButton" Content="Make Directory" HorizontalAlignment="Left" Margin="425,10,0,0" VerticalAlignment="Top" Height="20" Width="100" Click="afcMKDirButton_Click"/>
+                    <Button x:Name="afcUploadFileButton" Content="Upload File" HorizontalAlignment="Left" Margin="395,10,0,0" VerticalAlignment="Top" Height="20" Width="100" Click="afcUploadFileButton_Click"/>
+                    <Button x:Name="afcRefreshButton" Content="Refresh" HorizontalAlignment="Left" Margin="290,10,0,0" VerticalAlignment="Top" Height="20" Width="100" Click="afcRefreshButton_Click"/>
+                    <Button x:Name="afcMKDirButton" Content="Make Directory" HorizontalAlignment="Left" Margin="605,10,0,0" VerticalAlignment="Top" Height="20" Width="100" Click="afcMKDirButton_Click"/>
+                    <Button x:Name="afcDownloadFileButton" Content="Download File" HorizontalAlignment="Left" Margin="500,10,0,0" VerticalAlignment="Top" Height="20" Width="100" Click="afcDownloadFileButton_Click"/>
+                    <Button x:Name="afcDeleteSelectedButton" Content="Delete Selected" HorizontalAlignment="Left" Margin="710,10,0,0" VerticalAlignment="Top" Height="20" Width="100" Click="afcDeleteSelectedButton_Click"/>
+                    <Button x:Name="afcConnectAfc2Button" Content="Connect AFC2" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="100" Height="20" Click="afcConnectAfc2Button_Click"/>
+                    <ListBox x:Name="afcItemsListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,35,10,10" MouseDoubleClick="afcListBox_MouseDoubleClick"/>
                 </Grid>
             </TabItem>
-            <!--<TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="120">
+            <TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="120" IsEnabled="False">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
-            <TabItem x:Name="restoreTab" Header="Restore" Width="120">
+            <TabItem x:Name="restoreTab" Header="Restore" Width="120" IsEnabled="False">
                 <Grid Background="#FFE5E5E5">
                     <ListView x:Name="firmwareListView" Margin="10,10,420,48">
                         <ListView.View>
@@ -114,7 +117,7 @@
                     <Button x:Name="restoreFirmwareButton" Content="Restore" HorizontalAlignment="Left" Margin="81,0,0,10" VerticalAlignment="Bottom" Height="33" Width="66" Click="restoreFirmwareButton_Click"/>
                     <ListBox x:Name="restoreStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,10,10,10" HorizontalAlignment="Right" Width="405"/>
                 </Grid>
-            </TabItem>-->
+            </TabItem>
             <TabItem x:Name="packageManagerTab" Header="Package Manager" Width="120">
                 <Grid Background="#FFE5E5E5">
                     <GroupBox Header="Repos" Margin="10,10,754,10">
@@ -139,22 +142,6 @@
                             </ListView>
                         </Grid>
                     </GroupBox>
-                </Grid>
-            </TabItem>
-            <TabItem x:Name="settingsTab" Header="Settings" Width="120">
-                <Grid Background="#FFE5E5E5">
-                    <Button x:Name="saveSettingsButton" Content="Save Settings" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="25" Width="80" Click="saveSettingsButton_Click"/>
-                    <Button x:Name="aboutButton" Content="About" HorizontalAlignment="Left" Margin="180,0,0,10" VerticalAlignment="Bottom" Height="25" Width="40" Click="aboutButton_Click"/>
-                    <Button x:Name="resetSettingsButton" Content="Reset Settings" HorizontalAlignment="Left" Margin="95,0,11,10" VerticalAlignment="Bottom" Height="25" Width="80" Click="resetSettingsButton_Click"/>
-                    <ComboBox x:Name="themeSettingComboBox" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Width="300" IsDropDownOpen="False">
-                        <System:String>Teal</System:String>
-                        <System:String>Pink</System:String>
-                        <System:String>Purple</System:String>
-                        <System:String>Green</System:String>
-                    </ComboBox>
-                    <TextBox x:Name="fwJsonSourceTextBox" HorizontalAlignment="Left" Margin="10,89,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="300"/>
-                    <Label Content="Theme" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-                    <Label Content="Firmware JSON source" HorizontalAlignment="Left" Margin="10,63,0,0" VerticalAlignment="Top"/>
                 </Grid>
             </TabItem>
         </TabControl>

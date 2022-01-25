@@ -5,6 +5,7 @@ using iMobileDevice;
 using iMobileDevice.Afc;
 using iMobileDevice.iDevice;
 using iMobileDevice.Lockdown;
+using Microsoft.Win32.SafeHandles;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -20,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace iSuite
 {
@@ -48,13 +50,14 @@ namespace iSuite
 
         private string ipaPath;
         private string afcPath = "/";
-        //private string ipswPath;
+        private string ipswPath;
+        private string selectedBundleID;
 
         private Dictionary<string, string> deviceInfo = new Dictionary<string, string>();
         private Dictionary<string, string> batteryInfo = new Dictionary<string, string>();
         private List<DeviceApp> apps = new List<DeviceApp>();
         private ulong deviceUniqueChipID = 0; // ecid
-        private string deviceUUID;
+        private string deviceUDID;
 
         // storage related device info
         private ulong deviceTotalDiskCapacity = 0;
@@ -92,17 +95,12 @@ namespace iSuite
             {
                 File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(new OptionsJson()));
             }
-            //if (!File.Exists($"{dataLocation}bin/futurerestore-v194.exe")) (removed until fr beta comes out for win)
-            //{
-            //    File.WriteAllBytes($"{dataLocation}bin/futurerestore-v194.exe", iSuite.Resources.futurerestore_v194);
-            //}
             options = JsonConvert.DeserializeObject<OptionsJson>(File.ReadAllText(dataLocation + "options.json"));
             if (options.packageManagerRepos == null)
             {
-                options.packageManagerRepos = new List<string>() { "http://repo.kawaiizenbo.me/", "http://cydia.invoxiplaygames.uk/" };
+                options.packageManagerRepos = new List<string>() { "http://repo.kawaiizenbo.me/" };
             }
             usb.Source = Util.BitmapToImageSource(iSuite.Resources.usb);
-            LoadSettingsToControls();
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -166,9 +164,9 @@ namespace iSuite
                 }
                 else
                 {
-                    deviceUUID = udids[0];
+                    deviceUDID = udids[0];
                     ret.ThrowOnError();
-                    idevice.idevice_new(out deviceHandle, udids[0]).ThrowOnError();
+                    idevice.idevice_new(out deviceHandle, udids[0]);
                     lockdown.lockdownd_client_new_with_handshake(deviceHandle, out lockdownHandle, "iSuite");
                     lockdown.lockdownd_start_service(lockdownHandle, "com.apple.afc", out lockdownServiceHandle);
                     lockdownHandle.Api.Afc.afc_client_new(deviceHandle, lockdownServiceHandle, out afcHandle);
@@ -227,7 +225,7 @@ namespace iSuite
                 }
                 catch { }
                 deviceInfo["MAC Address"] = Util.GetLockdowndStringKey(lockdownHandle, null, "WiFiAddress").ToUpper();
-                deviceInfo["UUID"] = deviceUUID;
+                deviceInfo["UDID"] = deviceUDID;
                 deviceInfo["Activated"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState");
 
                 // storage
@@ -238,7 +236,7 @@ namespace iSuite
                 deviceTotalDataAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataAvailable");
 
                 // battery
-                batteryInfo["Current Capacity"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.battery", "BatteryCurrentCapacity").ToString() + "%";
+                batteryInfo["Current Charge"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.battery", "BatteryCurrentCapacity").ToString() + "%";
                 
 
                 // put them on the controls
@@ -276,7 +274,7 @@ namespace iSuite
                 try
                 {
                     afc.afc_read_directory(afcHandle, afcPath, out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
-                    afcListBox.ItemsSource = afcDirectory;
+                    afcItemsListBox.ItemsSource = afcDirectory;
                 }
                 catch (Exception ex)
                 {
@@ -315,10 +313,10 @@ namespace iSuite
 
                 deviceInfoListView.ItemsSource = deviceInfo;
 
-                appsTab.Visibility = Visibility.Hidden;
-                fileSystemTab.Visibility = Visibility.Hidden;
-                //jailbreakTab.Visibility = Visibility.Hidden;
-                //restoreTab.Visibility = Visibility.Hidden;
+                appsTab.IsEnabled = false;
+                fileSystemTab.IsEnabled = false;
+                //jailbreakTab.IsEnabled = false;
+                //restoreTa.IsEnabled = false;
             }
             else if (dfuConnected)
             {
@@ -328,35 +326,22 @@ namespace iSuite
                 powerOffDeviceButton.IsEnabled = false;
                 rebootDeviceButton.IsEnabled = false;
 
-                appsTab.Visibility = Visibility.Hidden;
-                fileSystemTab.Visibility = Visibility.Hidden;
-                //jailbreakTab.Visibility = Visibility.Hidden;
-                //restoreTab.Visibility = Visibility.Hidden;
+                appsTab.IsEnabled = false;
+                fileSystemTab.IsEnabled = false;
+                //jailbreakTab.IsEnabled = false;
+                //restoreTab.IsEnabled = false;
             }
             if (!recoveryConnected && !normalConnected && !dfuConnected)
             {
                 // hide things that wont work without a device
-                deviceInfoTab.Visibility = Visibility.Hidden;
-                appsTab.Visibility = Visibility.Hidden;
-                fileSystemTab.Visibility = Visibility.Hidden;
-                //jailbreakTab.Visibility = Visibility.Hidden;
-                //restoreTab.Visibility = Visibility.Hidden;
-
-                mainTabControl.SelectedItem = settingsTab;
+                deviceInfoTab.IsEnabled = false;
+                appsTab.IsEnabled = false;
+                fileSystemTab.IsEnabled = false;
+                //jailbreakTab.IsEnabled = false;
+                //restoreTab.IsEnabled = false;
             }
 
             mainTabControl.Visibility = Visibility.Visible;
-        }
-
-        private void LoadSettingsToControls()
-        {
-            themeSettingComboBox.SelectedItem = options.theme;
-            fwJsonSourceTextBox.Text = options.fwjsonsource;
-            foreach(string s in options.packageManagerRepos)
-            {
-                repoListBox.Items.Add(s);
-            }
-            
         }
 
         private async void installNewAppButton_Click(object sender, RoutedEventArgs e)
@@ -376,6 +361,17 @@ namespace iSuite
             await Task.Run(new Action(InstallAppThread));
         }
 
+        private void removeSelectedAppButton_Click(object sender, RoutedEventArgs e)
+        {
+            selectedBundleID = ((DeviceApp)installedAppsListView.SelectedItem).CFBundleIdentifier;
+
+            appInstallStatusListBox.Items.Add($"Attempting removal of of {selectedBundleID}");
+            var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
+            var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
+            scrollViewer.ScrollToBottom();
+            Task.Run(new Action(RemoveAppThread));
+        }
+
         private void InstallAppThread()
         {
             var proc = new Process
@@ -383,7 +379,7 @@ namespace iSuite
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "runtimes/win-x86/native/ideviceinstaller.exe",
-                    Arguments = $"-u {deviceUUID} --install \"{ipaPath}\"",
+                    Arguments = $"-u {deviceUDID} --install \"{ipaPath}\"",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -398,11 +394,59 @@ namespace iSuite
                 Dispatcher.Invoke(() =>
                 {
                     appInstallStatusListBox.Items.Add(line);
+                    var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
+                    var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
+                    scrollViewer.ScrollToBottom();
                 });
             }
             Dispatcher.Invoke(() =>
             {
-                appInstallStatusListBox.Items.Add("(Should be) done.");
+                appInstallStatusListBox.Items.Add($"Process ended with code {proc.ExitCode} {(proc.ExitCode == 0 ? "(Success)" : "")}");
+                var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
+                var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
+                scrollViewer.ScrollToBottom();
+                Task.Run(new Action(GetAppsThread));
+                installedAppsListView.ItemsSource = null;
+                installedAppsListView.ItemsSource = apps;
+            });
+        }
+
+        private void RemoveAppThread()
+        {
+            var proc = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "runtimes/win-x86/native/ideviceinstaller.exe",
+                    Arguments = $"-u {deviceUDID} --uninstall \"{selectedBundleID}\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+            proc.Start();
+            while (!proc.StandardOutput.EndOfStream && !proc.StandardError.EndOfStream)
+            {
+                string line = proc.StandardOutput.ReadLine();
+                if (line == null || line.Trim() == "") line = proc.StandardError.ReadLine();
+                Dispatcher.Invoke(() =>
+                {
+                    appInstallStatusListBox.Items.Add(line);
+                    var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
+                    var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
+                    scrollViewer.ScrollToBottom();
+                });
+            }
+            Dispatcher.Invoke(() =>
+            {
+                appInstallStatusListBox.Items.Add($"Process ended with code {proc.ExitCode} {(proc.ExitCode == 0 ? "(Success)" : "")}");
+                var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
+                var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
+                scrollViewer.ScrollToBottom();
+                Task.Run(new Action(GetAppsThread));
+                installedAppsListView.ItemsSource = null;
+                installedAppsListView.ItemsSource = apps;
             });
         }
 
@@ -413,7 +457,7 @@ namespace iSuite
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "runtimes/win-x86/native/ideviceinstaller.exe",
-                    Arguments = $"-u {deviceUUID} -l",
+                    Arguments = $"-u {deviceUDID} -l",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true
@@ -434,7 +478,6 @@ namespace iSuite
             }
             if (!proc.HasExited) proc.Kill();
         }
-        /* disabled
         private void RestoreThread()
         {
             var proc = new Process
@@ -464,7 +507,7 @@ namespace iSuite
         private async void refreshFirmwareButton_Click(object sender, RoutedEventArgs e)
         {
             // oh boy hope this doesnt ever go down
-            using (HttpClient wc = new())
+            using (HttpClient wc = new HttpClient())
             {
                 fws = JObject.Parse(await wc.GetStringAsync(options.fwjsonsource));
             }
@@ -472,7 +515,7 @@ namespace iSuite
         }
 
         private async void restoreFirmwareButton_Click(object sender, RoutedEventArgs e)
-        {
+        {/*
             if (MessageBox.Show("Restoring your device will erase ALL information\nPlease ensure that you are signed out of iCloud/Find My is disabled\nContinue?", "WARNING!", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
             if (firmwareListView.SelectedItem == null)
             {
@@ -485,14 +528,10 @@ namespace iSuite
                 MessageBox.Show("Restoring to iOS 1 and 2 is not supported.", "Error!");
                 return;
             }
-            if (!selectedFW.signed)
-            {
-                restoreStatusListBox.Items.Add("This firmware is (probably) not signed, restoring will most likely fail.");
-            }
             if (!File.Exists($"{dataLocation}IPSW/{selectedFW.filename}"))
             {
                 restoreStatusListBox.Items.Add($"Downloading iOS {selectedFW.version} for {deviceInfo["Identifier"]}");
-                using (WebClient wc = new())
+                using (WebClient wc = new WebClient())
                 {
                     wc.DownloadFile(new Uri(selectedFW.url), $"{dataLocation}IPSW/{selectedFW.filename}");
                 }
@@ -505,9 +544,8 @@ namespace iSuite
             }
             ipswPath = $"{dataLocation}IPSW/{selectedFW.filename}";
             await Task.Run(new Action(RestoreThread));
-            MessageBox.Show("Please restart the application.");
+            MessageBox.Show("Please restart the application.");*/
         }
-        */
         private async void continueWithoutDeviceButton_Click(object sender, RoutedEventArgs e)
         {
             await Init();
@@ -517,19 +555,11 @@ namespace iSuite
         {
             options = new OptionsJson();
             File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(options));
-            LoadSettingsToControls();
         }
 
         private void saveSettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            options.theme = (string)themeSettingComboBox.SelectedItem;
-            options.fwjsonsource = fwJsonSourceTextBox.Text;
             File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(options));
-        }
-
-        private void deviceInfoListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            Clipboard.SetText(((KeyValuePair<string, string>)deviceInfoListView.SelectedItem).Value);
         }
 
         private void addRepoButton_Click(object sender, RoutedEventArgs e)
@@ -709,7 +739,7 @@ namespace iSuite
 
         private void aboutButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("iSuite Public Beta by KawaiiZenbo\nBased on LibiMobileDevice", "About iSuite");
+            MessageBox.Show("iSuite by KawaiiZenbo\nBased on LibiMobileDevice and ", "About iSuite");
             //Process.Start("https://kawaiizenbo.me/abtis.html"); this file does not exist right now
         }
 
@@ -726,10 +756,15 @@ namespace iSuite
             MessageBox.Show("Please restart the application.");
         }
 
-        private async void refreshAppListButton_Click(object sender, RoutedEventArgs e)
+        private void refreshAppListButton_Click(object sender, RoutedEventArgs e)
         {
-            await Task.Run(new Action(GetAppsThread));
-            installedAppsListView.Items.Refresh();
+            Task.Run(new Action(GetAppsThread));
+            installedAppsListView.ItemsSource = null;
+            installedAppsListView.ItemsSource = apps;
+            appInstallStatusListBox.Items.Add("Refreshed.");
+            var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
+            var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
+            scrollViewer.ScrollToBottom();
         }
 
         private void afcGoButton_Click(object sender, RoutedEventArgs e)
@@ -738,7 +773,6 @@ namespace iSuite
             try
             {
                 afc.afc_read_directory(afcHandle, afcPath, out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
-                afcListBox.ItemsSource = afcDirectory;
             }
             catch (Exception ex)
             {
@@ -748,17 +782,21 @@ namespace iSuite
 
         private void afcListBox_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if ((string)afcListBox.SelectedItem == ".") return;
+            if (afcItemsListBox.SelectedItem.ToString() == ".") return;
             try
             {
-                afc.afc_read_directory(afcHandle, afcPath + $"/{afcListBox.SelectedItem}/", out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
-                if ((string)afcListBox.SelectedItem == "..")
+                afc.afc_read_directory(afcHandle, afcPath + $"/{afcItemsListBox.SelectedItem}/", out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
+                if (afcItemsListBox.SelectedItem.ToString() == "..")
                 {
-
+                    afcPath = afcPath.Replace('/' + afcPath.TrimEnd('/').Split('/').Last(), "");
                 }
-                afcPath += $"{afcListBox.SelectedItem}/";
-                afcListBox.ItemsSource = afcDirectory;
+                else
+                {
+                    afcPath += $"{afcItemsListBox.SelectedItem}/";
+                }
                 afcPathTextBox.Text = afcPath;
+                afcItemsListBox.ItemsSource = null;
+                afcItemsListBox.ItemsSource = afcDirectory;
             }
             catch (Exception ex)
             {
@@ -772,16 +810,19 @@ namespace iSuite
 
             openAfcUploadFile.ShowDialog();
 
+            if (openAfcUploadFile.FileName == "") return;
+
             string afcUploadFilePath = openAfcUploadFile.FileName;
 
             string afcUploadFileName = afcUploadFilePath.Split('\\').Last();
 
             ulong handle = 0UL;
-            this.afc.afc_file_open(afcHandle, afcPath + "/" + afcUploadFileName, AfcFileMode.FopenRw, ref handle);
+            afc.afc_file_open(afcHandle, afcPath + "/" + afcUploadFileName, AfcFileMode.FopenRw, ref handle);
             byte[] array = File.ReadAllBytes(afcUploadFilePath);
             uint bytesWritten = 0U;
-            this.afc.afc_file_write(afcHandle, handle, array, (uint)array.Length, ref bytesWritten);
-            this.afc.afc_file_close(afcHandle, handle);
+            afc.afc_file_write(afcHandle, handle, array, (uint)array.Length, ref bytesWritten);
+            afc.afc_file_close(afcHandle, handle);
+            afcRefreshButton_Click(sender, e);
         }
 
         private void afcRefreshButton_Click(object sender, RoutedEventArgs e)
@@ -789,7 +830,8 @@ namespace iSuite
             try
             {
                 afc.afc_read_directory(afcHandle, afcPath, out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
-                afcListBox.ItemsSource = afcDirectory;
+                afcItemsListBox.ItemsSource = null;
+                afcItemsListBox.ItemsSource = afcDirectory;
             }
             catch (Exception ex)
             {
@@ -804,6 +846,75 @@ namespace iSuite
             f.LabelText = "Please enter the name for the new directory.";
             f.ShowDialog();
             afc.afc_make_directory(afcHandle, afcPath + "/" + f.TextBoxContents);
+            afcRefreshButton_Click(sender, e);
+        }
+
+        private void afcConnectAfc2Button_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // idk this causes issues sometimes blame libusbmuxd
+                lockdown.lockdownd_start_service(lockdownHandle, "com.apple.afc2", out lockdownServiceHandle).ThrowOnError();
+                lockdownHandle.Api.Afc.afc_client_new(deviceHandle, lockdownServiceHandle, out afcHandle).ThrowOnError();
+                afcPath = "/";
+                afcPathTextBox.Text = afcPath;
+                afcRefreshButton_Click(sender, e);
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Could not connect to afc2");
+            }
+        }
+
+        private void afcDeleteSelectedButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                afc.afc_remove_path(afcHandle, afcPath + $"/{afcItemsListBox.SelectedItem}").ThrowOnError();
+                afcRefreshButton_Click(sender, e);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Could not delete object");
+            }
+        }
+
+        private void afcDownloadFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            var saveAfcFile = new Microsoft.Win32.SaveFileDialog();
+            saveAfcFile.FileName = afcItemsListBox.SelectedItem.ToString();
+
+            saveAfcFile.ShowDialog();
+
+            string afcSaveFilePath = saveAfcFile.FileName;
+            string afcFilePath = afcPath + "/" + afcItemsListBox.SelectedItem.ToString();
+            afc.afc_get_file_info(afcHandle, afcFilePath, out ReadOnlyCollection<string> infoListr);
+            List<string> infoList = new List<string>(infoListr.ToArray());
+            long fileSize = Convert.ToInt64(infoList[infoList.FindIndex(x => x == "st_size") + 1]);
+
+            ulong fileHandle = 0;
+            afc.afc_file_open(afcHandle, afcFilePath, AfcFileMode.FopenRdonly, ref fileHandle);
+
+            FileStream fileStream = File.Create(afcSaveFilePath);
+            const int bufferSize = 4194304;
+            for (int i = 0; i < fileSize / bufferSize + 1; i++)
+            {
+                uint bytesRead = 0;
+
+                long remainder = fileSize - i * bufferSize;
+                int currBufferSize = remainder >= bufferSize ? bufferSize : (int)remainder;
+                byte[] currBuffer = new byte[currBufferSize];
+
+                if ((afc.afc_file_read(afcHandle, fileHandle, currBuffer, Convert.ToUInt32(currBufferSize), ref bytesRead))
+                    != AfcError.Success)
+                {
+                    afc.afc_file_close(afcHandle, fileHandle);
+                }
+
+                fileStream.Write(currBuffer, 0, currBufferSize);
+            }
+
+            fileStream.Close();
         }
     }
 }
