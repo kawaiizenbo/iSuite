@@ -10,21 +10,33 @@ jobs:
     steps:
     - uses: actions/checkout@v1
       name: Checkout Code
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
      
     - name: Setup MSBuild Path
       uses: warrenbuckley/Setup-MSBuild@v1
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
        
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1.0.2
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
      
     - name: Restore NuGet Packages
       run: nuget restore SimpleFrameworkApp.sln
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
  
     - name: Build and Publish Web App
       run: msbuild SimpleFrameworkApp.sln /p:Configuration=Release /p:DeployOnBuild=true /p:PublishProfile=FolderProfile
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
  
     - name: Upload Artifact
       uses: actions/upload-artifact@v1.0.0
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       with:
         name: iSuite_GA
         path: bin\Release\Publish
