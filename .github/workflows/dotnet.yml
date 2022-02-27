@@ -39,4 +39,4 @@ jobs:
        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       with:
         name: iSuite_GA
-        path: bin\Release\net472\Publish
+        path: ..\bin\Release\net472\publish\
