@@ -28,7 +28,7 @@ jobs:
       env:
        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
  
-    - name: Build and Publish Web App
+    - name: Build and Publish App
       run: msbuild iSuite.sln /p:Configuration=Release /p:DeployOnBuild=true /p:PublishProfile=FolderProfile
       env:
        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
@@ -39,4 +39,4 @@ jobs:
        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       with:
         name: iSuite_GA
-        path: bin\Release\Publish
+        path: bin\Release\net472\Publish
