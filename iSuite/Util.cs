@@ -3,6 +3,7 @@ using iMobileDevice.Lockdown;
 using iMobileDevice.Plist;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -59,11 +60,12 @@ namespace iSuite
             {
                 lockdown.lockdownd_get_value(lockdownHandle, domain, key, out PlistHandle temp).ThrowOnError();
                 temp.Api.Plist.plist_get_string_val(temp, out string s);
+                Debug.WriteLine($"{domain}.{key}");
                 return s;
             }
             catch (Exception)
             {
-                throw new LockdownException();
+                throw new LockdownException(LockdownError.MissingKey);
             }
         }
 
@@ -73,6 +75,7 @@ namespace iSuite
             ulong u = 0;
             lockdown.lockdownd_get_value(lockdownHandle, domain, key, out PlistHandle temp).ThrowOnError();
             temp.Api.Plist.plist_get_uint_val(temp, ref u);
+            Debug.WriteLine($"{domain}.{key}");
             return u;
         }
 

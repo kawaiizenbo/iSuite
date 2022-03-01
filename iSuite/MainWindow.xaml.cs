@@ -170,35 +170,24 @@ namespace iSuite
 
         private async Task Init()
         {
-            try
-            {
-                using (WebClient wc = new WebClient())
-                {
-                    File.WriteAllText(dataLocation + "fws.json", wc.DownloadString(new Uri(options.fwjsonsource)));
-                    fws = JObject.Parse(File.ReadAllText(dataLocation + "fws.json"));
-                }
-            }
-            catch (Exception)
-            {
-                onlineFlag = false;
-            }
-
             if (normalConnected)
             {
                 // get device info
                 deviceInfo["Name"] = Util.GetLockdowndStringKey(lockdownHandle, null, "DeviceName");
                 deviceInfo["Identifier"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductType");
-                deviceInfo["Model Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ModelNumber") + Util.GetLockdowndStringKey(lockdownHandle, null, "RegionInfo");
+                deviceInfo["Model Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ModelNumber") + 
+                    Util.GetLockdowndStringKey(lockdownHandle, null, "RegionInfo");
                 deviceInfo["Board Config"] = Util.GetLockdowndStringKey(lockdownHandle, null, "HardwareModel");
+                deviceInfo["Architecture"] = Util.GetLockdowndStringKey(lockdownHandle, null, "CPUArchitecture");
                 deviceInfo["Version"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductVersion");
                 deviceInfo["Build"] = Util.GetLockdowndStringKey(lockdownHandle, null, "BuildVersion");
                 try
                 {
                     deviceInfo["Baseband Ver."] = Util.GetLockdowndStringKey(lockdownHandle, null, "BasebandVersion");
                 }
-                catch { }
-                deviceUniqueChipID = Util.GetLockdowndUlongKey(lockdownHandle, null, "UniqueChipID");
+                catch(Exception) { }
                 deviceInfo["Serial Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "SerialNumber");
+                deviceUniqueChipID = Util.GetLockdowndUlongKey(lockdownHandle, null, "UniqueChipID");
                 deviceInfo["ECID"] = string.Format("{0:X}", deviceUniqueChipID);
                 try
                 {
@@ -212,10 +201,17 @@ namespace iSuite
                     }
                     deviceInfo["Phone Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "PhoneNumber");
                 }
-                catch { }
-                deviceInfo["MAC Address"] = Util.GetLockdowndStringKey(lockdownHandle, null, "WiFiAddress").ToUpper();
+                catch(Exception) { }
                 deviceInfo["UDID"] = deviceUDID;
+                deviceInfo["WiFI MAC Address"] = Util.GetLockdowndStringKey(lockdownHandle, null, "WiFiAddress").ToUpper();
                 deviceInfo["Activated"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState");
+                try
+                {
+                    // ios 3 and lower doent have this
+                    deviceInfo["Resolution"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.iTunes", "ScreenWidth").ToString() + "x" +
+                        Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.iTunes", "ScreenHeight").ToString();
+                }
+                catch(Exception) { }
 
                 // storage
                 deviceTotalDiskCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDiskCapacity");
@@ -226,11 +222,11 @@ namespace iSuite
 
                 // battery
                 batteryInfo["Current Charge"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.battery", "BatteryCurrentCapacity").ToString() + "%";
-                
+
 
                 // put them on the controls
-                if (onlineFlag) deviceInfoGroupBox.Header = fws["device"][deviceInfo["Identifier"]]["name"];
-                else deviceInfoGroupBox.Header = deviceInfo["Identifier"];
+                try { deviceInfoGroupBox.Header = Util.GetLockdowndStringKey(lockdownHandle, null, "MarketingName"); }
+                catch (Exception) { deviceInfoGroupBox.Header = deviceInfo["Identifier"]; }
 
                 deviceStorageGroupBox.Header = $"Device Storage ({Util.FormatBytes(deviceTotalDiskCapacity)} Total)";
 
@@ -727,7 +723,6 @@ namespace iSuite
         private void aboutButton_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("iSuite by KawaiiZenbo\nBased on LibiMobileDevice and ", "About iSuite");
-            //Process.Start("https://kawaiizenbo.me/abtis.html"); this file does not exist right now
         }
 
         private void rebootDeviceButton_Click(object sender, RoutedEventArgs e)
