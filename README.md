@@ -13,3 +13,8 @@ please report any bugs you find in the issues tab.
 ~~make the afc tab good (lazy)~~ mostly done  
 restoring + using (ota)blobs (waiting for futurerestore 2.0 on windows build)  
 jailbreaks (need developer approval)
+## Credits
+KawaiiZenbo (Actual Creator)  
+JamesnLollify (Advertiser and Other)  
+Fahrenheit (The Feature Suggester)  
+Bonnibel [Redacted]   
