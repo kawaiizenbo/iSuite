@@ -39,7 +39,7 @@ jobs:
        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       with:
         name: publish-x86
-        path: bin\Release\net472\win7-x86\win-x86\
+        path: iSuite\bin\Release\net472\win7-x86\win-x86\
         
     - name: Upload Artifact
       uses: actions/upload-artifact@v1.0.0
@@ -47,4 +47,4 @@ jobs:
        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       with:
         name: publish-x64
-        path: bin\Release\net472\win7-x86\win-x64\
+        path: iSuite\bin\Release\net472\win7-x86\win-x64\
