@@ -16,5 +16,7 @@ jailbreaks (need developer approval)
 ## Credits
 KawaiiZenbo (Actual Creator)  
 JamesnLollify (Advertiser and Other)  
-Fahrenheit (The Feature Suggester)  
+Fahrenheight (The Feature Suggester)  
+Baggette (Moral Support)  
+Sudaox (Motivation by competition)  
 Bonnibel [Redacted]   
