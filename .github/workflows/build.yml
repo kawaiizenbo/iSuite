@@ -9,22 +9,34 @@ jobs:
  
     steps:
     - uses: actions/checkout@v1
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       name: Checkout Code
      
     - name: Setup MSBuild
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       uses: microsoft/setup-msbuild@v1.1
        
     - name: Setup NuGet
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       uses: NuGet/setup-nuget@v1.0.2
      
     - name: Restore NuGet Packages
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       run: nuget restore iSuite.sln
  
     - name: Build and Publish
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       run: msbuild iSuite.sln /p:Configuration=Release /p:DeployOnBuild=true /p:PublishProfile=FolderProfile
  
     - name: Upload Artifact
       uses: actions/upload-artifact@v1.0.0
+      env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       with:
         name: publish
         path: bin\Release\Publish
