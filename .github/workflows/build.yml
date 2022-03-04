@@ -39,4 +39,4 @@ jobs:
        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       with:
         name: publish
-        path: bin\Release\Publish
+        path: bin\Release\net472\win7-x86\
