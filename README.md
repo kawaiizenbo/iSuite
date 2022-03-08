@@ -14,7 +14,7 @@ please report any bugs you find in the issues tab.
 restoring + using (ota)blobs (waiting for futurerestore 2.0 on windows build)  
 jailbreaks (need developer approval)
 ## Credits
-Bonnibel (KawaiiZenbo) (Actual Creator)  
+KawaiiZenbo (Actual Creator)  
 JamesnLollify (Advertiser and Other)  
 Fahrenheight (The Feature Suggester)  
 Baggette (Moral Support)  
