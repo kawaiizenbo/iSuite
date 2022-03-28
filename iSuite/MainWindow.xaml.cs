@@ -36,6 +36,7 @@ namespace iSuite
 
         private JObject fws;
         private bool onlineFlag = true;
+        private bool sensitiveInfoShown = true;
 
         private bool shouldStopDetecting = false;
 
@@ -53,7 +54,7 @@ namespace iSuite
         private string selectedBundleID;
 
         private Dictionary<string, string> deviceInfo = new Dictionary<string, string>();
-        private Dictionary<string, string> batteryInfo = new Dictionary<string, string>();
+        private Dictionary<string, string> stDeviceInfo = new Dictionary<string, string>();
         private List<DeviceApp> apps = new List<DeviceApp>();
         private ulong deviceUniqueChipID = 0; // ecid
         private string deviceUDID;
@@ -64,6 +65,9 @@ namespace iSuite
         private ulong deviceTotalDataCapacity = 0;
         private ulong deviceTotalSystemAvailable = 0;
         private ulong deviceTotalDataAvailable = 0;
+
+        bool dragging = false;
+        Point startPoint;
 
         public MainWindow()
         {
@@ -173,17 +177,17 @@ namespace iSuite
             if (normalConnected)
             {
                 // get device info
-                deviceInfo["Name"] = Util.GetLockdowndStringKey(lockdownHandle, null, "DeviceName");
-                deviceInfo["Identifier"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductType");
-                deviceInfo["Model Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ModelNumber") + 
+                stDeviceInfo["Name"] = deviceInfo["Name"] = Util.GetLockdowndStringKey(lockdownHandle, null, "DeviceName");
+                stDeviceInfo["Identifier"] = deviceInfo["Identifier"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductType");
+                stDeviceInfo["Model Number"] = deviceInfo["Model Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ModelNumber") + 
                     Util.GetLockdowndStringKey(lockdownHandle, null, "RegionInfo");
-                deviceInfo["Board Config"] = Util.GetLockdowndStringKey(lockdownHandle, null, "HardwareModel");
-                deviceInfo["Architecture"] = Util.GetLockdowndStringKey(lockdownHandle, null, "CPUArchitecture");
-                deviceInfo["Version"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductVersion");
-                deviceInfo["Build"] = Util.GetLockdowndStringKey(lockdownHandle, null, "BuildVersion");
+                stDeviceInfo["Board Config"] = deviceInfo["Board Config"] = Util.GetLockdowndStringKey(lockdownHandle, null, "HardwareModel");
+                stDeviceInfo["Architecture"] = deviceInfo["Architecture"] = Util.GetLockdowndStringKey(lockdownHandle, null, "CPUArchitecture");
+                stDeviceInfo["Version"] = deviceInfo["Version"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductVersion");
+                stDeviceInfo["Build"] = deviceInfo["Build"] = Util.GetLockdowndStringKey(lockdownHandle, null, "BuildVersion");
                 try
                 {
-                    deviceInfo["Baseband Ver."] = Util.GetLockdowndStringKey(lockdownHandle, null, "BasebandVersion");
+                    stDeviceInfo["Baseband Ver."] = deviceInfo["Baseband Ver."] = Util.GetLockdowndStringKey(lockdownHandle, null, "BasebandVersion");
                 }
                 catch(Exception) { }
                 deviceInfo["Serial Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "SerialNumber");
@@ -204,11 +208,11 @@ namespace iSuite
                 catch(Exception) { }
                 deviceInfo["UDID"] = deviceUDID;
                 deviceInfo["WiFI MAC Address"] = Util.GetLockdowndStringKey(lockdownHandle, null, "WiFiAddress").ToUpper();
-                deviceInfo["Activated"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState");
+                stDeviceInfo["Activated"] = deviceInfo["Activated"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState");
                 try
                 {
                     // ios 3 and lower doent have this
-                    deviceInfo["Resolution"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.iTunes", "ScreenWidth").ToString() + "x" +
+                    stDeviceInfo["Resolution"] = deviceInfo["Resolution"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.iTunes", "ScreenWidth").ToString() + "x" +
                         Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.iTunes", "ScreenHeight").ToString();
                 }
                 catch(Exception) { }
@@ -221,7 +225,7 @@ namespace iSuite
                 deviceTotalDataAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataAvailable");
 
                 // battery
-                batteryInfo["Current Charge"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.battery", "BatteryCurrentCapacity").ToString() + "%";
+                stDeviceInfo["Current Charge"] = deviceInfo["Current Charge"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.battery", "BatteryCurrentCapacity").ToString() + "%";
 
 
                 // put them on the controls
@@ -242,10 +246,9 @@ namespace iSuite
                 systemStorageProgressBar.Value = (int)((deviceTotalSystemCapacity - deviceTotalSystemAvailable) / 10000000);
                 dataStorageProgressBar.Value = (int)((deviceTotalDataCapacity - deviceTotalDataAvailable) / 10000000);
 
-                deviceInfo["Capacity"] = Util.FormatBytes(deviceTotalDiskCapacity);
+                stDeviceInfo["Capacity"] = deviceInfo["Capacity"] = Util.FormatBytes(deviceTotalDiskCapacity);
 
                 deviceInfoListView.ItemsSource = deviceInfo;
-                batteryInfoListView.ItemsSource = batteryInfo;
 
                 // get apps
                 await Task.Run(new Action(GetAppsThread));
@@ -897,6 +900,48 @@ namespace iSuite
             }
 
             fileStream.Close();
+        }
+
+        private void closeButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void topBarGrid_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            dragging = true;
+            startPoint = e.GetPosition(this.topBarGrid);
+        }
+
+        private void topBarGrid_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            dragging = false;
+        }
+
+        private void Window_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (dragging)
+            {
+                Point p = PointToScreen(e.GetPosition(this.topBarGrid));
+                window.Left = p.X - this.startPoint.X;
+                window.Top = p.Y - this.startPoint.Y;
+            }
+        }
+
+        private void sensitiveInfoToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sensitiveInfoShown)
+            {
+                deviceInfoListView.ItemsSource = stDeviceInfo;
+                sensitiveInfoShown = false;
+                sensitiveInfoToggleButton.Content = "Show sensitive info";
+            }
+            else
+            {
+                deviceInfoListView.ItemsSource = deviceInfo;
+                sensitiveInfoShown = true;
+                sensitiveInfoToggleButton.Content = "Hide sensitive info";
+            }
         }
     }
 }
