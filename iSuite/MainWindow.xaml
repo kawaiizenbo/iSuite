@@ -50,7 +50,7 @@
                             <Button x:Name="rebootDeviceButton" Content="Reboot" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="100" Height="30" Click="rebootDeviceButton_Click" Margin="125,0,0,10" FontSize="11"/>
                             <Button x:Name="recoveryModeToggleButton" Content="Enter Recovery" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="30" Width="100" Click="recoveryModeToggleButton_Click" Margin="0,0,342,10" FontSize="11"/>
                             <Button x:Name="sensitiveInfoToggleButton" Content="Hide sensitive info" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="30" Width="100" Margin="0,0,237,10" FontSize="11" Click="sensitiveInfoToggleButton_Click"/>
-                            <Button x:Name="openiDeviceLogButton" Content="Open SysLog" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="30" Width="100" Margin="0,0,237,10" FontSize="11" Click="openiDeviceLogButton_Click"/>
+                            <Button x:Name="openiDeviceLogButton" Content="Open SysLog" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="30" Width="100" Margin="0,0,132,10" FontSize="11" Click="openiDeviceLogButton_Click"/>
                         </Grid>
                     </GroupBox>
                 </Grid>
