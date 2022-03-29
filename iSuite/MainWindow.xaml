@@ -16,7 +16,7 @@
             <Image x:Name="usb" Width="300" Height="300" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"/>
         </Grid>
         <TabControl x:Name="mainTabControl" Height="700" VerticalAlignment="Bottom" Margin="1,0,1,1">
-            <TabItem x:Name="deviceInfoTab" Header="Device Info" Width="120">
+            <TabItem x:Name="deviceInfoTab" Header="Device Info" Width="110">
                 <Grid Background="#FFE5E5E5">
                     <GroupBox x:Name="deviceInfoGroupBox" Header="Loading...">
                         <Grid>
@@ -50,11 +50,12 @@
                             <Button x:Name="rebootDeviceButton" Content="Reboot" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="100" Height="30" Click="rebootDeviceButton_Click" Margin="125,0,0,10" FontSize="11"/>
                             <Button x:Name="recoveryModeToggleButton" Content="Enter Recovery" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="30" Width="100" Click="recoveryModeToggleButton_Click" Margin="0,0,342,10" FontSize="11"/>
                             <Button x:Name="sensitiveInfoToggleButton" Content="Hide sensitive info" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="30" Width="100" Margin="0,0,237,10" FontSize="11" Click="sensitiveInfoToggleButton_Click"/>
+                            <Button x:Name="openiDeviceLogButton" Content="Open SysLog" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="30" Width="100" Margin="0,0,237,10" FontSize="11" Click="openiDeviceLogButton_Click"/>
                         </Grid>
                     </GroupBox>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="appsTab" Header="Apps" Width="120">
+            <TabItem x:Name="appsTab" Header="Apps" Width="110">
                 <Grid Background="#FFE5E5E5">
                     <Button x:Name="installNewAppButton" Content="Install New" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="25" Width="75" Click="installNewAppButton_Click"/>
                     <ListBox x:Name="appInstallStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,0,10,40" HorizontalAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Bottom" Height="250">
@@ -64,7 +65,7 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <ListView x:Name="installedAppsListView" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,10,10,0" VerticalAlignment="Top" Height="350">
+                    <ListView x:Name="installedAppsListView" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,10,10,0" VerticalAlignment="Top" Height="367">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="App Name" DisplayMemberBinding="{Binding CFBundleDisplayName}"/>
@@ -77,7 +78,7 @@
                     <Button x:Name="removeSelectedAppButton" Content="Remove Selected" HorizontalAlignment="Left" Margin="90,0,0,10" VerticalAlignment="Bottom" Width="100" Height="25" Click="removeSelectedAppButton_Click"/>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="fileSystemTab" Header="File System" Width="120">
+            <TabItem x:Name="fileSystemTab" Header="File System" Width="110">
                 <Grid Background="#FFE5E5E5">
                     <TextBox x:Name="afcPathTextBox" HorizontalAlignment="Left" Margin="10,5,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="200" Height="25"/>
                     <Button x:Name="afcGoButton" Content="Go" HorizontalAlignment="Left" Margin="215,5,0,0" VerticalAlignment="Top" Height="25" Width="30" Click="afcGoButton_Click"/>
@@ -90,10 +91,10 @@
                     <ListBox x:Name="afcItemsListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,35,10,10" MouseDoubleClick="afcListBox_MouseDoubleClick"/>
                 </Grid>
             </TabItem>
-            <!--<TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="120" IsEnabled="False">
+            <TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="110" IsEnabled="False">
                 <Grid Background="#FFE5E5E5"/>
-            </TabItem>-->
-            <TabItem x:Name="restoreTab" Header="Restore" Width="120" IsEnabled="False">
+            </TabItem>
+            <TabItem x:Name="restoreTab" Header="Restore" Width="110" IsEnabled="False">
                 <Grid Background="#FFE5E5E5">
                     <ListView x:Name="firmwareListView" Margin="10,10,420,48">
                         <ListView.View>
@@ -110,7 +111,7 @@
                     <ListBox x:Name="restoreStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,10,10,10" HorizontalAlignment="Right" Width="405"/>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="packageManagerTab" Header="Package Manager" Width="120">
+            <TabItem x:Name="packageManagerTab" Header="Package Manager" Width="110">
                 <Grid Background="#FFE5E5E5">
                     <GroupBox Header="Repos" Margin="10,10,444,10">
                         <Grid>

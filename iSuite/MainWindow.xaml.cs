@@ -943,5 +943,17 @@ namespace iSuite
                 sensitiveInfoToggleButton.Content = "Hide sensitive info";
             }
         }
+
+        private void openiDeviceLogButton_Click(object sender, RoutedEventArgs e)
+        {
+            using (Process p = new Process())
+            {
+                p.StartInfo.FileName = "idevicesyslog.exe";
+                p.StartInfo.Arguments = "-u" + deviceUDID;
+                p.StartInfo.CreateNoWindow = true;
+                p.Start();
+                p.WaitForExit();
+            }
+        }
     }
 }
