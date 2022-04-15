@@ -10,13 +10,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Resources\icon.ico" />
+    <None Remove="icon.png" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="iMobileDevice-net" Version="1.3.17" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="SharpZipLib" Version="1.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="icon.png" />
   </ItemGroup>
 
   <ItemGroup>

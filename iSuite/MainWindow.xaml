@@ -139,8 +139,13 @@
             </TabItem>
         </TabControl>
         <Grid x:Name="topBarGrid" VerticalAlignment="Top" Height="30" Background="{x:Static SystemParameters.WindowGlassBrush}" MouseDown="topBarGrid_MouseDown" MouseUp="topBarGrid_MouseUp">
-            <Label Content="iSuite" HorizontalAlignment="Left" Margin="5,2.5,0,0" VerticalAlignment="Top"/>
+            <Label Content="iSuite" HorizontalAlignment="Left" Margin="31,2.5,0,0" VerticalAlignment="Top"/>
             <Button x:Name="closeButton" Content="X" HorizontalAlignment="Right" VerticalAlignment="Top" Width="32" Height="24" BorderBrush="#FFFFFFFF" Background="White" Foreground="#FF333333" Click="closeButton_Click" Margin="0,3,3,0" FontSize="11" FontWeight="Bold"/>
+            <Grid HorizontalAlignment="Left" Height="24" Margin="5,3,0,0" VerticalAlignment="Top" Width="24">
+                <Grid.Background>
+                    <ImageBrush ImageSource="/icon.png"/>
+                </Grid.Background>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
