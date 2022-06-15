@@ -37,6 +37,9 @@
                             <GroupBox Header="Device Information" Margin="10,10,10,140">
                                 <Grid>
                                     <ListView x:Name="deviceInfoListView" HorizontalAlignment="Stretch" Margin="5,5,5,5">
+                                        <ListView.Foreground>
+                                            <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.InfoTextColorKey}}"/>
+                                        </ListView.Foreground>
                                         <ListView.View>
                                             <GridView>
                                                 <GridViewColumn Header="Key" DisplayMemberBinding="{Binding Key}" Width="150"/>
@@ -91,24 +94,24 @@
                     <ListBox x:Name="afcItemsListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,35,10,10" MouseDoubleClick="afcListBox_MouseDoubleClick"/>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="110" IsEnabled="False">
+            <TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="110">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
-            <TabItem x:Name="restoreTab" Header="Restore" Width="110" IsEnabled="False">
+            <TabItem x:Name="restoreTab" Header="Restore" Width="110">
                 <Grid Background="#FFE5E5E5">
-                    <ListView x:Name="firmwareListView" Margin="10,10,420,48">
+                    <ListView x:Name="firmwareListView" Margin="10,10,315,48">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Version" Width="100" DisplayMemberBinding="{Binding version}"/>
-                                <GridViewColumn Header="Build ID" Width="100" DisplayMemberBinding="{Binding buildid}"/>
-                                <GridViewColumn Header="Signed" Width="100" DisplayMemberBinding="{Binding signed}"/>
-                                <GridViewColumn Header="Release Date" Width="200" DisplayMemberBinding="{Binding uploaddate}"/>
+                                <GridViewColumn Header="Version" Width="75" DisplayMemberBinding="{Binding version}"/>
+                                <GridViewColumn Header="Build ID" Width="75" DisplayMemberBinding="{Binding buildid}"/>
+                                <GridViewColumn Header="Signed" Width="50" DisplayMemberBinding="{Binding signed}"/>
+                                <GridViewColumn Header="Release Date" Width="150" DisplayMemberBinding="{Binding uploaddate}"/>
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <Button x:Name="refreshFirmwareButton" Content="Refresh" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="33" Width="66" Click="refreshFirmwareButton_Click"/>
-                    <Button x:Name="restoreFirmwareButton" Content="Restore" HorizontalAlignment="Left" Margin="81,0,0,10" VerticalAlignment="Bottom" Height="33" Width="66" Click="restoreFirmwareButton_Click"/>
-                    <ListBox x:Name="restoreStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,10,10,10" HorizontalAlignment="Right" Width="405"/>
+                    <Button x:Name="refreshFirmwareButton" Content="Refresh" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="33" Width="99" Click="refreshFirmwareButton_Click"/>
+                    <Button x:Name="restoreFirmwareButton" Content="Restore" HorizontalAlignment="Left" Margin="114,0,0,10" VerticalAlignment="Bottom" Height="33" Width="99" Click="restoreFirmwareButton_Click"/>
+                    <ListBox x:Name="restoreStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="374,10,0,48" HorizontalAlignment="Left" Width="300"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="packageManagerTab" Header="Package Manager" Width="110">
