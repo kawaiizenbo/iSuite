@@ -16,7 +16,7 @@
             <Image x:Name="usb" Width="300" Height="300" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"/>
         </Grid>
         <TabControl x:Name="mainTabControl" Height="700" VerticalAlignment="Bottom" Margin="1,0,1,1">
-            <TabItem x:Name="deviceInfoTab" Header="Device Info" Width="110">
+            <TabItem x:Name="deviceInfoTab" Header="Device Info" Width="90">
                 <Grid Background="#FFE5E5E5">
                     <GroupBox x:Name="deviceInfoGroupBox" Header="Loading...">
                         <Grid>
@@ -58,7 +58,7 @@
                     </GroupBox>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="appsTab" Header="Apps" Width="110">
+            <TabItem x:Name="appsTab" Header="Apps" Width="90">
                 <Grid Background="#FFE5E5E5">
                     <Button x:Name="installNewAppButton" Content="Install New" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="25" Width="75" Click="installNewAppButton_Click"/>
                     <ListBox x:Name="appInstallStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,0,10,40" HorizontalAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Bottom" Height="250">
@@ -81,23 +81,23 @@
                     <Button x:Name="removeSelectedAppButton" Content="Remove Selected" HorizontalAlignment="Left" Margin="90,0,0,10" VerticalAlignment="Bottom" Width="100" Height="25" Click="removeSelectedAppButton_Click"/>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="fileSystemTab" Header="File System" Width="110">
+            <TabItem x:Name="fileSystemTab" Header="File System" Width="90">
                 <Grid Background="#FFE5E5E5">
-                    <TextBox x:Name="afcPathTextBox" HorizontalAlignment="Left" Margin="10,5,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="200" Height="25"/>
-                    <Button x:Name="afcGoButton" Content="Go" HorizontalAlignment="Left" Margin="215,5,0,0" VerticalAlignment="Top" Height="25" Width="30" Click="afcGoButton_Click"/>
-                    <Button x:Name="afcUploadFileButton" Content="Upload File" HorizontalAlignment="Left" Margin="305,5,0,0" VerticalAlignment="Top" Height="25" Width="75" Click="afcUploadFileButton_Click"/>
-                    <Button x:Name="afcRefreshButton" Content="Refresh" HorizontalAlignment="Left" Margin="250,5,0,0" VerticalAlignment="Top" Height="25" Width="50" Click="afcRefreshButton_Click"/>
-                    <Button x:Name="afcMKDirButton" Content="Make Directory" HorizontalAlignment="Left" Margin="575,5,0,0" VerticalAlignment="Top" Height="25" Width="100" Click="afcMKDirButton_Click"/>
-                    <Button x:Name="afcDownloadFileButton" Content="Download File" HorizontalAlignment="Left" Margin="385,5,0,0" VerticalAlignment="Top" Height="25" Width="90" Click="afcDownloadFileButton_Click"/>
-                    <Button x:Name="afcDeleteSelectedButton" Content="Delete Selected" HorizontalAlignment="Left" Margin="710,10,0,0" VerticalAlignment="Top" Height="20" Width="100" Click="afcDeleteSelectedButton_Click"/>
-                    <Button x:Name="afcConnectAfc2Button" Content="Connect AFC2" HorizontalAlignment="Left" Margin="480,5,0,0" VerticalAlignment="Top" Width="90" Height="25" Click="afcConnectAfc2Button_Click"/>
-                    <ListBox x:Name="afcItemsListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,35,10,10" MouseDoubleClick="afcListBox_MouseDoubleClick"/>
+                    <TextBox x:Name="afcPathTextBox" HorizontalAlignment="Left" Margin="65,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="574" Height="25"/>
+                    <Button x:Name="afcGoButton" Content="Go" HorizontalAlignment="Left" Margin="644,10,0,0" VerticalAlignment="Top" Height="25" Width="30" Click="afcGoButton_Click"/>
+                    <Button x:Name="afcUploadFileButton" Content="Upload File" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top" Height="25" Width="100" Click="afcUploadFileButton_Click"/>
+                    <Button x:Name="afcRefreshButton" Content="Refresh" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="25" Width="50" Click="afcRefreshButton_Click"/>
+                    <Button x:Name="afcMKDirButton" Content="Make Directory" HorizontalAlignment="Left" Margin="325,40,0,0" VerticalAlignment="Top" Height="25" Width="100" Click="afcMKDirButton_Click"/>
+                    <Button x:Name="afcDownloadFileButton" Content="Download File" HorizontalAlignment="Left" Margin="115,40,0,0" VerticalAlignment="Top" Height="25" Width="100" Click="afcDownloadFileButton_Click"/>
+                    <Button x:Name="afcDeleteSelectedButton" Content="Delete Selected" HorizontalAlignment="Left" Margin="430,40,0,0" VerticalAlignment="Top" Height="25" Width="100" Click="afcDeleteSelectedButton_Click"/>
+                    <Button x:Name="afcConnectAfc2Button" Content="Connect AFC2" HorizontalAlignment="Left" Margin="220,40,0,0" VerticalAlignment="Top" Width="100" Height="25" Click="afcConnectAfc2Button_Click"/>
+                    <ListBox x:Name="afcItemsListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,70,10,10" MouseDoubleClick="afcListBox_MouseDoubleClick"/>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="110">
+            <TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="90" IsEnabled="False">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
-            <TabItem x:Name="restoreTab" Header="Restore" Width="110">
+            <TabItem x:Name="restoreTab" Header="Restore" Width="90" IsEnabled="False">
                 <Grid Background="#FFE5E5E5">
                     <ListView x:Name="firmwareListView" Margin="10,10,315,48">
                         <ListView.View>
@@ -136,6 +136,16 @@
                                     </GridView>
                                 </ListView.View>
                             </ListView>
+                        </Grid>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+            <TabItem HorizontalAlignment="Center" Height="20" Header="Settings" VerticalAlignment="Center" Width="90" IsEnabled="False">
+                <Grid Background="#FFE5E5E5">
+                    <GroupBox Header="Display" Margin="10,10,10,462">
+                        <Grid>
+                            <Label Content="Language" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                            <ComboBox HorizontalAlignment="Left" Margin="100,14,0,0" VerticalAlignment="Top" Width="120" IsReadOnly="True"/>
                         </Grid>
                     </GroupBox>
                 </Grid>
