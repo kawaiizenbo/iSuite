@@ -97,7 +97,7 @@
             <TabItem x:Name="jailbreakTab" Header="Jailbreak" Width="90" IsEnabled="False">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
-            <TabItem x:Name="restoreTab" Header="Restore" Width="90" IsEnabled="False">
+            <TabItem x:Name="restoreTab" Header="Restore" Width="90">
                 <Grid Background="#FFE5E5E5">
                     <ListView x:Name="firmwareListView" Margin="10,10,315,48">
                         <ListView.View>
@@ -111,7 +111,8 @@
                     </ListView>
                     <Button x:Name="refreshFirmwareButton" Content="Refresh" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="33" Width="99" Click="refreshFirmwareButton_Click"/>
                     <Button x:Name="restoreFirmwareButton" Content="Restore" HorizontalAlignment="Left" Margin="114,0,0,10" VerticalAlignment="Bottom" Height="33" Width="99" Click="restoreFirmwareButton_Click"/>
-                    <ListBox x:Name="restoreStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="374,10,0,48" HorizontalAlignment="Left" Width="300"/>
+                    <ListBox x:Name="restoreStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="374,10,0,10" HorizontalAlignment="Left" Width="300"/>
+                    <Button Content="Check downloaded IPSWs" HorizontalAlignment="Left" Margin="219,629,0,0" VerticalAlignment="Top" Width="150" Height="33"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="packageManagerTab" Header="Package Manager" Width="110">
@@ -140,25 +141,52 @@
                     </GroupBox>
                 </Grid>
             </TabItem>
-            <TabItem HorizontalAlignment="Center" Height="20" Header="Settings" VerticalAlignment="Center" Width="90" IsEnabled="False">
+            <TabItem HorizontalAlignment="Center" Height="20" Header="Options" VerticalAlignment="Center" Width="90">
                 <Grid Background="#FFE5E5E5">
-                    <GroupBox Header="Display" Margin="10,10,10,462">
+                    <GroupBox Header="Display" Margin="10,10,10,10" VerticalAlignment="Top" Height="120">
                         <Grid>
                             <Label Content="Language" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-                            <ComboBox HorizontalAlignment="Left" Margin="100,14,0,0" VerticalAlignment="Top" Width="120" IsReadOnly="True"/>
+                            <ComboBox x:Name="languageComboBox" HorizontalAlignment="Left" Margin="125,14,0,0" VerticalAlignment="Top" Width="200" IsReadOnly="True">
+                                <ComboBoxItem Content="English"/>
+                            </ComboBox>
+                            <Label Content="Color Scheme" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
+                            <ComboBox x:Name="colorSchemeComboBox" HorizontalAlignment="Left" Margin="125,43,0,0" VerticalAlignment="Top" Width="200" SelectionChanged="colorSchemeComboBox_SelectionChanged">
+                                <ComboBoxItem Content="Sync"/>
+                                <ComboBoxItem Content="Blue"/>
+                                <ComboBoxItem Content="Green"/>
+                                <ComboBoxItem Content="Purple"/>
+                                <ComboBoxItem Content="Red"/>
+                                <ComboBoxItem Content="Pink"/>
+                            </ComboBox>
+                            <CheckBox x:Name="darkModeCheckBox" Content="Dark Mode" HorizontalAlignment="Left" Margin="10,72,0,0" VerticalAlignment="Top" Checked="darkModeCheckBox_Checked"/>
                         </Grid>
                     </GroupBox>
+                    <GroupBox Header="Locations" Margin="10,135,10,0" VerticalAlignment="Top" Height="125">
+                        <Grid>
+                            <Label Content="Temp Data" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                            <Label Content="IPSW API" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
+                            <Label Content="Jailbreak API" HorizontalAlignment="Left" Margin="10,72,0,0" VerticalAlignment="Top"/>
+                            <TextBox x:Name="tempDataLocTextBox" HorizontalAlignment="Left" Margin="125,18,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="300"/>
+                            <TextBox x:Name="jailbreakApiTextBox" HorizontalAlignment="Left" Margin="125,76,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="300"/>
+                            <TextBox x:Name="ipswApiTextBox" HorizontalAlignment="Left" Margin="125,45,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="300"/>
+                            <Button Content="Browse" HorizontalAlignment="Left" Margin="430,17,0,0" VerticalAlignment="Top" Width="50"/>
+                        </Grid>
+                    </GroupBox>
+                    <Button x:Name="creditsButton" Content="Credits" HorizontalAlignment="Left" Margin="10,637,0,0" VerticalAlignment="Top" Width="75" Height="25" Click="creditsButton_Click"/>
+                    <Button x:Name="saveSettingsButton" Content="Save" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="75" Height="25" Margin="0,0,10,10" Click="saveSettingsButton_Click"/>
+                    <Button x:Name="resetSettingsButton" Content="Reset" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="75" Height="25" Margin="0,0,90,10" Click="resetSettingsButton_Click"/>
                 </Grid>
             </TabItem>
         </TabControl>
         <Grid x:Name="topBarGrid" VerticalAlignment="Top" Height="30" Background="{x:Static SystemParameters.WindowGlassBrush}" MouseDown="topBarGrid_MouseDown" MouseUp="topBarGrid_MouseUp">
             <Label Content="iSuite" HorizontalAlignment="Left" Margin="31,2.5,0,0" VerticalAlignment="Top"/>
-            <Button x:Name="closeButton" Content="X" HorizontalAlignment="Right" VerticalAlignment="Top" Width="32" Height="24" BorderBrush="#FFFFFFFF" Background="White" Foreground="#FF333333" Click="closeButton_Click" Margin="0,3,3,0" FontSize="11" FontWeight="Bold"/>
+            <Button x:Name="closeButton" Content="&#xE10A;" HorizontalAlignment="Left" VerticalAlignment="Center" Width="40" Height="30" Foreground="Black" Click="closeButton_Click" FontWeight="Bold" FontFamily="Segoe UI Symbol" FontSize="16" Background="#00000000" BorderBrush="#00000000" Margin="652,0,0,0"/>
             <Grid HorizontalAlignment="Left" Height="24" Margin="5,3,0,0" VerticalAlignment="Top" Width="24">
                 <Grid.Background>
                     <ImageBrush ImageSource="/icon.png"/>
                 </Grid.Background>
             </Grid>
+            <Button x:Name="minimizeButton" Content="&#xE108;" HorizontalAlignment="Right" VerticalAlignment="Center" Width="40" Height="30" Foreground="Black" FontWeight="Bold" FontFamily="Segoe UI Symbol" FontSize="16" Background="#00000000" BorderBrush="#00000000" Margin="0,0,40,0" Click="minimizeButton_Click"/>
         </Grid>
     </Grid>
 </Window>

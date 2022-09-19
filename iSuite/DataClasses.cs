@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Security.Permissions;
 
 namespace iSuite
 {
@@ -9,6 +10,20 @@ namespace iSuite
         public string CFBundleIdentifier { get; set; }
         public string CFBundleVersion { get; set; }
         public string CFBundleDisplayName { get; set; }
+    }
+
+    public class Firmware
+    {
+        public string identifier { get; set; }
+        public string version { get; set; }
+        public string buildid { get; set; }
+        public string sha1sum { get; set; }
+        public string md5sum { get; set; }
+        public long filesize { get; set; }
+        public string url { get; set; }
+        public DateTime releasedate { get; set; }
+        public DateTime uploaddate { get; set; }
+        public bool signed { get; set; }
     }
 
     public class DebPackage
@@ -32,8 +47,13 @@ namespace iSuite
     // options.json
     public class OptionsJson
     {
-        public string fwjsonsource { get; set; } = "https://api.appledb.dev/main.json";
-        public List<string> packageManagerRepos { get; set; } 
+        public string IPSWApiSource { get; set; } = "https://api.ipsw.me/v4/";
+        public string JailbreakAPISource { get; set; } = "https://api.appledb.dev/";
+        public string TempDataLocation { get; set; } = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/iSuite/temp";
+        public int ColorScheme { get; set; } = 0;
+        public bool DarkMode { get; set; } = false;
+        public int Language { get; set; } = 0;
+        public List<string> PackageManagerRepos { get; set; } = new List<string>() { "http://repo.kawaiizenbo.me/" };
     }
 
 }

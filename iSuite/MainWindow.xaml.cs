@@ -34,7 +34,6 @@ namespace iSuite
         private LockdownServiceDescriptorHandle lockdownServiceHandle;
         private AfcClientHandle afcHandle;
 
-        private JObject fws;
         private bool onlineFlag = true;
         private bool sensitiveInfoShown = true;
 
@@ -82,10 +81,6 @@ namespace iSuite
             {
                 Directory.CreateDirectory(dataLocation);
             }
-            if (!Directory.Exists(dataLocation + "IPSW/"))
-            {
-                Directory.CreateDirectory(dataLocation + "IPSW/");
-            }
             if (!Directory.Exists(dataLocation + "temp/"))
             {
                 Directory.CreateDirectory(dataLocation + "temp/");
@@ -94,20 +89,24 @@ namespace iSuite
             {
                 Directory.CreateDirectory(dataLocation + "bin/");
             }
-            if (!File.Exists(dataLocation + "options.json"))
+            if (!File.Exists(dataLocation + "/options.json"))
             {
-                File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(new OptionsJson()));
+                File.WriteAllText(dataLocation + "/options.json", JsonConvert.SerializeObject(new OptionsJson()));
             }
-            options = JsonConvert.DeserializeObject<OptionsJson>(File.ReadAllText(dataLocation + "options.json"));
-            if (options.packageManagerRepos == null)
-            {
-                options.packageManagerRepos = new List<string>() { "http://repo.kawaiizenbo.me/" };
-            }
+            options = JsonConvert.DeserializeObject<OptionsJson>(File.ReadAllText(dataLocation + "/options.json"));
             usb.Source = Util.BitmapToImageSource(iSuite.Resources.usb);
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             mainTabControl.Visibility = Visibility.Hidden;
+
+            // set options controls to options
+            ipswApiTextBox.Text = options.IPSWApiSource;
+            jailbreakApiTextBox.Text = options.JailbreakAPISource;
+            tempDataLocTextBox.Text = options.TempDataLocation;
+            darkModeCheckBox.IsChecked = options.DarkMode;
+            languageComboBox.SelectedIndex = options.Language;
+            colorSchemeComboBox.SelectedIndex = options.ColorScheme;
 
             // check for them until you dont need to check for them anymore
             await Task.Run(new Action(DeviceDetectorThread));
@@ -303,8 +302,8 @@ namespace iSuite
 
                 appsTab.IsEnabled = false;
                 fileSystemTab.IsEnabled = false;
-                //jailbreakTab.IsEnabled = false;
-                //restoreTa.IsEnabled = false;
+                jailbreakTab.IsEnabled = false;
+                restoreTab.IsEnabled = true;
             }
             else if (dfuConnected)
             {
@@ -316,8 +315,8 @@ namespace iSuite
 
                 appsTab.IsEnabled = false;
                 fileSystemTab.IsEnabled = false;
-                //jailbreakTab.IsEnabled = false;
-                //restoreTab.IsEnabled = false;
+                jailbreakTab.IsEnabled = false;
+                restoreTab.IsEnabled = true;
             }
             if (!recoveryConnected && !normalConnected && !dfuConnected)
             {
@@ -325,8 +324,8 @@ namespace iSuite
                 deviceInfoTab.IsEnabled = false;
                 appsTab.IsEnabled = false;
                 fileSystemTab.IsEnabled = false;
-                //jailbreakTab.IsEnabled = false;
-                //restoreTab.IsEnabled = false;
+                jailbreakTab.IsEnabled = false;
+                restoreTab.IsEnabled = false;
             }
 
             mainTabControl.Visibility = Visibility.Visible;
@@ -472,8 +471,8 @@ namespace iSuite
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = $"{dataLocation}bin/futurerestore-v194.exe",
-                    Arguments = $"--latest-baseband \"{ipswPath}\"",
+                    FileName = $"idevicerestore.exe",
+                    Arguments = $"--erase -u -y {deviceInfo["UDID"]} \"{ipswPath}\"",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -496,14 +495,12 @@ namespace iSuite
         {
             using (WebClient wc = new WebClient())
             {
-                File.WriteAllText(dataLocation + "fws.json", wc.DownloadString(new Uri(options.fwjsonsource)));
-                fws = JObject.Parse(File.ReadAllText(dataLocation + "fws.json"));
+                firmwareListView.ItemsSource = JObject.Parse(wc.DownloadString(new Uri($"{options.IPSWApiSource}/device/{deviceInfo["Identifier"]}?type=ipsw")))["firmwares"];
             }
-            firmwareListView.ItemsSource = fws["devices"][deviceInfo["Identifier"]]["firmwares"];
         }
 
         private async void restoreFirmwareButton_Click(object sender, RoutedEventArgs e)
-        {/*
+        {
             if (MessageBox.Show("Restoring your device will erase ALL information\nPlease ensure that you are signed out of iCloud/Find My is disabled\nContinue?", "WARNING!", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
             if (firmwareListView.SelectedItem == null)
             {
@@ -516,23 +513,23 @@ namespace iSuite
                 MessageBox.Show("Restoring to iOS 1 and 2 is not supported.", "Error!");
                 return;
             }
-            if (!File.Exists($"{dataLocation}IPSW/{selectedFW.filename}"))
+            if (!File.Exists($"{options.TempDataLocation}/{selectedFW.identifier}-{selectedFW.buildid}.ipsw"))
             {
                 restoreStatusListBox.Items.Add($"Downloading iOS {selectedFW.version} for {deviceInfo["Identifier"]}");
                 using (WebClient wc = new WebClient())
                 {
-                    wc.DownloadFile(new Uri(selectedFW.url), $"{dataLocation}IPSW/{selectedFW.filename}");
+                    wc.DownloadFile(new Uri(selectedFW.url), $"{options.TempDataLocation}/{selectedFW.identifier}-{selectedFW.buildid}.ipsw");
                 }
                 restoreStatusListBox.Items.Add($"Download complete.");
             }
-            if (Util.CalculateMD5($"{dataLocation}IPSW/{selectedFW.filename}") != selectedFW.md5sum)
+            if (Util.CalculateMD5($"{options.TempDataLocation}/{selectedFW.identifier}-{selectedFW.buildid}.ipsw") != selectedFW.md5sum)
             {
                 restoreStatusListBox.Items.Add("File hash verification failed.");
                 return;
             }
-            ipswPath = $"{dataLocation}IPSW/{selectedFW.filename}";
+            ipswPath = $"{options.TempDataLocation}/{selectedFW.identifier}-{selectedFW.buildid}.ipsw";
             await Task.Run(new Action(RestoreThread));
-            MessageBox.Show("Please restart the application.");*/
+            MessageBox.Show("Please restart the application.");
         }
         private async void continueWithoutDeviceButton_Click(object sender, RoutedEventArgs e)
         {
@@ -542,11 +539,12 @@ namespace iSuite
         private void resetSettingsButton_Click(object sender, RoutedEventArgs e)
         {
             options = new OptionsJson();
-            File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(options));
-        }
-
-        private void saveSettingsButton_Click(object sender, RoutedEventArgs e)
-        {
+            ipswApiTextBox.Text = options.IPSWApiSource;
+            jailbreakApiTextBox.Text = options.JailbreakAPISource;
+            darkModeCheckBox.IsChecked = options.DarkMode;
+            tempDataLocTextBox.Text = options.TempDataLocation;
+            languageComboBox.SelectedIndex = options.Language;
+            colorSchemeComboBox.SelectedIndex = options.ColorScheme;
             File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(options));
         }
 
@@ -558,7 +556,7 @@ namespace iSuite
             if (!repo.StartsWith("http://") && !repo.StartsWith("https://")) repo = "http://" + repo;
             if (!repo.EndsWith("/")) repo += "/";
             repoListBox.Items.Add(repo);
-            options.packageManagerRepos.Add(repo);
+            options.PackageManagerRepos.Add(repo);
             File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(options));
             addRepoTextBox.Text = null;
         }
@@ -721,11 +719,6 @@ namespace iSuite
                 }
                 MessageBox.Show("Please restart the application.");
             }
-        }
-
-        private void aboutButton_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("iSuite by KawaiiZenbo\nBased on LibiMobileDevice and ", "About iSuite");
         }
 
         private void rebootDeviceButton_Click(object sender, RoutedEventArgs e)
@@ -954,6 +947,77 @@ namespace iSuite
                 p.Start();
                 p.WaitForExit();
             }
+        }
+
+        private void creditsButton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("iSuite by KawaiiZenbo\nBased on LibiMobileDevice\nIPSW API by ipsw.me\nJailbreak API by littlebyte", "About iSuite");
+        }
+
+        private void saveSettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            options.IPSWApiSource = ipswApiTextBox.Text;
+            options.JailbreakAPISource = jailbreakApiTextBox.Text;
+            options.DarkMode = (bool)darkModeCheckBox.IsChecked;
+            options.TempDataLocation = tempDataLocTextBox.Text;
+            options.Language = languageComboBox.SelectedIndex;
+            options.ColorScheme = colorSchemeComboBox.SelectedIndex;
+            File.WriteAllText(dataLocation + "/options.json", JsonConvert.SerializeObject(options));
+        }
+
+        private void darkModeCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            
+        }
+
+        private void colorSchemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            switch (colorSchemeComboBox.SelectedIndex)
+            {
+                case 0:
+                    window.Background = SystemParameters.WindowGlassBrush;
+                    systemStorageProgressBar.Foreground = SystemParameters.WindowGlassBrush;
+                    dataStorageProgressBar.Foreground = SystemParameters.WindowGlassBrush;
+                    topBarGrid.Background = SystemParameters.WindowGlassBrush;
+                    break;
+                case 1:
+                    window.Background = new SolidColorBrush(Colors.DodgerBlue);
+                    systemStorageProgressBar.Foreground = new SolidColorBrush(Colors.DodgerBlue);
+                    dataStorageProgressBar.Foreground = new SolidColorBrush(Colors.DodgerBlue);
+                    topBarGrid.Background = new SolidColorBrush(Colors.DodgerBlue);
+                    break;
+                case 2:
+                    window.Background = new SolidColorBrush(Colors.Chartreuse);
+                    systemStorageProgressBar.Foreground = new SolidColorBrush(Colors.Chartreuse);
+                    dataStorageProgressBar.Foreground = new SolidColorBrush(Colors.Chartreuse);
+                    topBarGrid.Background = new SolidColorBrush(Colors.Chartreuse);
+                    break;
+                case 3:
+                    window.Background = new SolidColorBrush(Colors.MediumOrchid);
+                    systemStorageProgressBar.Foreground = new SolidColorBrush(Colors.MediumOrchid);
+                    dataStorageProgressBar.Foreground = new SolidColorBrush(Colors.MediumOrchid);
+                    topBarGrid.Background = new SolidColorBrush(Colors.MediumOrchid);
+                    break;
+                case 4:
+                    window.Background = new SolidColorBrush(Colors.Coral);
+                    systemStorageProgressBar.Foreground = new SolidColorBrush(Colors.Coral);
+                    dataStorageProgressBar.Foreground = new SolidColorBrush(Colors.Coral);
+                    topBarGrid.Background = new SolidColorBrush(Colors.Coral);
+                    break;
+                case 5:
+                    window.Background = new SolidColorBrush(Colors.Pink);
+                    systemStorageProgressBar.Foreground = new SolidColorBrush(Colors.Pink);
+                    dataStorageProgressBar.Foreground = new SolidColorBrush(Colors.Pink);
+                    topBarGrid.Background = new SolidColorBrush(Colors.Pink);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void minimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
         }
     }
 }
