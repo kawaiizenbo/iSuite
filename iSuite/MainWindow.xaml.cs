@@ -47,10 +47,10 @@ namespace iSuite
 
         private OptionsJson options;
 
-        private string ipaPath;
+        private string ipaPath = "";
         private string afcPath = "/";
-        private string ipswPath;
-        private string selectedBundleID;
+        private string ipswPath = "";
+        private string selectedBundleID = "";
 
         private Dictionary<string, string> deviceInfo = new Dictionary<string, string>();
         private Dictionary<string, string> stDeviceInfo = new Dictionary<string, string>();
@@ -67,6 +67,7 @@ namespace iSuite
 
         bool dragging = false;
         Point startPoint;
+        System.Windows.Forms.Timer ProbeTimer = new System.Windows.Forms.Timer();
 
         public MainWindow()
         {
@@ -75,6 +76,9 @@ namespace iSuite
             idevice = LibiMobileDevice.Instance.iDevice;
             lockdown = LibiMobileDevice.Instance.Lockdown;
             afc = LibiMobileDevice.Instance.Afc;
+            ProbeTimer.Enabled = false;
+            ProbeTimer.Interval = 500;
+            ProbeTimer.Tick += new EventHandler(Probe);
 
             // Load settings
             if (!Directory.Exists(dataLocation))
@@ -169,6 +173,86 @@ namespace iSuite
                 }
                 Thread.Sleep(1000);
             }
+        }
+
+        private void Probe(object sender, EventArgs e)
+        {
+            int count = 0;
+
+            iDeviceError ret = idevice.idevice_get_device_list(out ReadOnlyCollection<string> udids, ref count);
+
+            if (ret == iDeviceError.NoDevice || udids.Count == 0)
+            {
+                Process process = new Process();
+                process.StartInfo.FileName = "irecovery.exe";
+                process.StartInfo.Arguments = "-q";
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.Start();
+                Thread.Sleep(1000);
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                }
+                if (process.ExitCode == 0)
+                {
+                    string text = process.StandardOutput.ReadToEnd();
+                    if (text.Contains("Recovery"))
+                    {
+                        recoveryConnected = true;
+                        dfuConnected = false;
+                        normalConnected = false;
+                        shouldStopDetecting = true;
+                    }
+                    else if (text.Contains("DFU"))
+                    {
+                        dfuConnected = true;
+                        recoveryConnected = false;
+                        normalConnected = false;
+                        shouldStopDetecting = true;
+                    }
+                    else
+                    {
+                        ResetAll();
+                    }
+                }
+                else
+                {
+                    ResetAll();
+                }
+            }
+        }
+
+        private async void ResetAll()
+        {
+            mainTabControl.Visibility = Visibility.Hidden;
+
+            deviceTotalDiskCapacity = 0;
+            deviceTotalSystemCapacity = 0;
+            deviceTotalDataCapacity = 0;
+            deviceTotalSystemAvailable = 0;
+            deviceTotalDataAvailable = 0;
+            deviceInfo = new Dictionary<string, string>();
+            stDeviceInfo = new Dictionary<string, string>();
+            apps = new List<DeviceApp>();
+            deviceUniqueChipID = 0; // ecid
+            deviceUDID = "0";
+            deviceHandle = null;
+            lockdownHandle = null;
+            lockdownServiceHandle = null;
+            afcHandle = null;
+            normalConnected = false;
+            recoveryConnected = false;
+            dfuConnected = false;
+            ipaPath = "";
+            afcPath = "/";
+            ipswPath = "";
+            selectedBundleID = "";
+            shouldStopDetecting = false;
+
+            await Task.Run(new Action(DeviceDetectorThread));
+            await Init();
         }
 
         private async Task Init()
@@ -329,6 +413,7 @@ namespace iSuite
             }
 
             mainTabControl.Visibility = Visibility.Visible;
+            ProbeTimer.Enabled = true;
         }
 
         private async void installNewAppButton_Click(object sender, RoutedEventArgs e)
