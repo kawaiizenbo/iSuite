@@ -26,44 +26,39 @@ namespace iSuite
 {
     public partial class MainWindow : Window
     {
-        private IiDeviceApi idevice;
-        private ILockdownApi lockdown;
-        private IAfcApi afc;
-        private iDeviceHandle deviceHandle;
-        private LockdownClientHandle lockdownHandle;
-        private LockdownServiceDescriptorHandle lockdownServiceHandle;
-        private AfcClientHandle afcHandle;
+        public static IiDeviceApi idevice;
+        public static ILockdownApi lockdown;
+        public static IAfcApi afc;
+        public static iDeviceHandle deviceHandle;
+        public static LockdownClientHandle lockdownHandle;
+        public static LockdownServiceDescriptorHandle lockdownServiceHandle;
+        public static AfcClientHandle afcHandle;
 
-        private bool onlineFlag = true;
-        private bool sensitiveInfoShown = true;
+        public static bool onlineFlag = true;
 
-        private bool shouldStopDetecting = false;
+        public static bool shouldStopDetecting = false;
 
-        private bool normalConnected = false;
-        private bool recoveryConnected = false;
-        private bool dfuConnected = false;
+        public static bool normalConnected = false;
+        public static bool recoveryConnected = false;
+        public static bool dfuConnected = false;
 
-        private string dataLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/iSuite/";
+        public static string dataLocation = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}/iSuite/";
 
-        private OptionsJson options;
+        public static OptionsJson options;
 
-        private string ipaPath = "";
-        private string afcPath = "/";
-        private string ipswPath = "";
-        private string selectedBundleID = "";
-
-        private Dictionary<string, string> deviceInfo = new Dictionary<string, string>();
-        private Dictionary<string, string> stDeviceInfo = new Dictionary<string, string>();
-        private List<DeviceApp> apps = new List<DeviceApp>();
-        private ulong deviceUniqueChipID = 0; // ecid
-        private string deviceUDID;
+        public static Dictionary<string, string> deviceInfo = new Dictionary<string, string>();
+        public static Dictionary<string, string> stDeviceInfo = new Dictionary<string, string>();
+        
+        public static ulong deviceUniqueChipID = 0; // ecid
+        public static string deviceUDID;
+        public static string deviceIdentifier;
 
         // storage related device info
-        private ulong deviceTotalDiskCapacity = 0;
-        private ulong deviceTotalSystemCapacity = 0;
-        private ulong deviceTotalDataCapacity = 0;
-        private ulong deviceTotalSystemAvailable = 0;
-        private ulong deviceTotalDataAvailable = 0;
+        public static ulong deviceDiskCapacity = 0;
+        public static ulong deviceSystemCapacity = 0;
+        public static ulong deviceSystemAvailable = 0;
+        public static ulong deviceDataCapacity = 0;
+        public static ulong deviceDataAvailable = 0;
 
         bool dragging = false;
         Point startPoint;
@@ -99,22 +94,6 @@ namespace iSuite
             }
             options = JsonConvert.DeserializeObject<OptionsJson>(File.ReadAllText(dataLocation + "/options.json"));
             usb.Source = Util.BitmapToImageSource(iSuite.Resources.usb);
-        }
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            mainTabControl.Visibility = Visibility.Hidden;
-
-            // set options controls to options
-            ipswApiTextBox.Text = options.IPSWApiSource;
-            jailbreakApiTextBox.Text = options.JailbreakAPISource;
-            tempDataLocTextBox.Text = options.TempDataLocation;
-            darkModeCheckBox.IsChecked = options.DarkMode;
-            languageComboBox.SelectedIndex = options.Language;
-            colorSchemeComboBox.SelectedIndex = options.ColorScheme;
-
-            // check for them until you dont need to check for them anymore
-            await Task.Run(new Action(DeviceDetectorThread));
-            await Init();
         }
 
         private void DeviceDetectorThread()
@@ -228,15 +207,14 @@ namespace iSuite
         {
             mainTabControl.Visibility = Visibility.Hidden;
 
-            deviceTotalDiskCapacity = 0;
-            deviceTotalSystemCapacity = 0;
-            deviceTotalDataCapacity = 0;
-            deviceTotalSystemAvailable = 0;
-            deviceTotalDataAvailable = 0;
+            deviceDiskCapacity = 0;
+            deviceSystemCapacity = 0;
+            deviceDataCapacity = 0;
+            deviceSystemAvailable = 0;
+            deviceDataAvailable = 0;
             deviceInfo = new Dictionary<string, string>();
             stDeviceInfo = new Dictionary<string, string>();
-            apps = new List<DeviceApp>();
-            deviceUniqueChipID = 0; // ecid
+            deviceUniqueChipID = 0;
             deviceUDID = "0";
             deviceHandle = null;
             lockdownHandle = null;
@@ -245,10 +223,8 @@ namespace iSuite
             normalConnected = false;
             recoveryConnected = false;
             dfuConnected = false;
-            ipaPath = "";
-            afcPath = "/";
-            ipswPath = "";
-            selectedBundleID = "";
+            AFCPage.afcPath = "/";
+            RestorePage.ipswPath = "";
             shouldStopDetecting = false;
 
             await Task.Run(new Action(DeviceDetectorThread));
@@ -257,20 +233,22 @@ namespace iSuite
 
         private async Task Init()
         {
+            waitingForDeviceLabel.Content = "Device Found";
+            ensureTrustedLabel.Content = "Obtaining device data...";
             if (normalConnected)
             {
                 // get device info
                 stDeviceInfo["Name"] = deviceInfo["Name"] = Util.GetLockdowndStringKey(lockdownHandle, null, "DeviceName");
-                stDeviceInfo["Identifier"] = deviceInfo["Identifier"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductType");
+                deviceIdentifier = stDeviceInfo["Product Identifier"] = deviceInfo["Product Identifier"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductType");
                 stDeviceInfo["Model Number"] = deviceInfo["Model Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ModelNumber") + 
                     Util.GetLockdowndStringKey(lockdownHandle, null, "RegionInfo");
-                stDeviceInfo["Board Config"] = deviceInfo["Board Config"] = Util.GetLockdowndStringKey(lockdownHandle, null, "HardwareModel");
+                stDeviceInfo["Board Configuration"] = deviceInfo["Board Configuration"] = Util.GetLockdowndStringKey(lockdownHandle, null, "HardwareModel");
                 stDeviceInfo["Architecture"] = deviceInfo["Architecture"] = Util.GetLockdowndStringKey(lockdownHandle, null, "CPUArchitecture");
-                stDeviceInfo["Version"] = deviceInfo["Version"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductVersion");
-                stDeviceInfo["Build"] = deviceInfo["Build"] = Util.GetLockdowndStringKey(lockdownHandle, null, "BuildVersion");
+                stDeviceInfo["iOS Version"] = deviceInfo["iOS Version"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductVersion");
+                stDeviceInfo["iOS Build"] = deviceInfo["iOS Build"] = Util.GetLockdowndStringKey(lockdownHandle, null, "BuildVersion");
                 try
                 {
-                    stDeviceInfo["Baseband Ver."] = deviceInfo["Baseband Ver."] = Util.GetLockdowndStringKey(lockdownHandle, null, "BasebandVersion");
+                    stDeviceInfo["Baseband Version"] = deviceInfo["Baseband Version"] = Util.GetLockdowndStringKey(lockdownHandle, null, "BasebandVersion");
                 }
                 catch(Exception) { }
                 deviceInfo["Serial Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "SerialNumber");
@@ -290,74 +268,41 @@ namespace iSuite
                 }
                 catch(Exception) { }
                 deviceInfo["UDID"] = deviceUDID;
-                deviceInfo["WiFI MAC Address"] = Util.GetLockdowndStringKey(lockdownHandle, null, "WiFiAddress").ToUpper();
-                stDeviceInfo["Activated"] = deviceInfo["Activated"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState");
+                deviceInfo["Wi-Fi MAC Address"] = Util.GetLockdowndStringKey(lockdownHandle, null, "WiFiAddress").ToUpper();
+                stDeviceInfo["Activation Status"] = deviceInfo["Activation Status"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState");
                 try
                 {
                     // ios 3 and lower doent have this
-                    stDeviceInfo["Resolution"] = deviceInfo["Resolution"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.iTunes", "ScreenWidth").ToString() + "x" +
+                    stDeviceInfo["Display Resolution"] = deviceInfo["Display Resolution"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.iTunes", "ScreenWidth").ToString() + "x" +
                         Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.iTunes", "ScreenHeight").ToString();
                 }
                 catch(Exception) { }
 
                 // storage
-                deviceTotalDiskCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDiskCapacity");
-                deviceTotalSystemCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemCapacity");
-                deviceTotalDataCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataCapacity");
-                deviceTotalSystemAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemAvailable");
-                deviceTotalDataAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataAvailable");
+                deviceDiskCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDiskCapacity");
+                deviceSystemCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemCapacity");
+                deviceDataCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataCapacity");
+                deviceSystemAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemAvailable");
+                deviceDataAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataAvailable");
+                stDeviceInfo["Disk Capacity"] = deviceInfo["Disk Capacity"] = Util.FormatBytes(deviceDiskCapacity);
 
                 // battery
                 stDeviceInfo["Current Charge"] = deviceInfo["Current Charge"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.battery", "BatteryCurrentCapacity").ToString() + "%";
-
-
-                // put them on the controls
-                try { deviceInfoGroupBox.Header = Util.GetLockdowndStringKey(lockdownHandle, null, "MarketingName"); }
-                catch (Exception) { deviceInfoGroupBox.Header = deviceInfo["Identifier"]; }
-
-                deviceStorageGroupBox.Header = $"Device Storage ({Util.FormatBytes(deviceTotalDiskCapacity)} Total)";
-
-                systemStorageLabel.Content = $"System ({Util.FormatBytes(deviceTotalSystemCapacity)} Total)";
-                dataStorageLabel.Content = $"Data ({Util.FormatBytes(deviceTotalDataCapacity)} Total)";
-
-                systemStorageFreeLabel.Content = $"{Util.FormatBytes(deviceTotalSystemAvailable)} Free";
-                dataStorageFreeLabel.Content = $"{Util.FormatBytes(deviceTotalDataAvailable)} Free";
-
-                systemStorageProgressBar.Maximum = (int)(deviceTotalSystemCapacity / 10000000);
-                dataStorageProgressBar.Maximum = (int)(deviceTotalDataCapacity / 10000000);
-
-                systemStorageProgressBar.Value = (int)((deviceTotalSystemCapacity - deviceTotalSystemAvailable) / 10000000);
-                dataStorageProgressBar.Value = (int)((deviceTotalDataCapacity - deviceTotalDataAvailable) / 10000000);
-
-                stDeviceInfo["Capacity"] = deviceInfo["Capacity"] = Util.FormatBytes(deviceTotalDiskCapacity);
-
-                deviceInfoListView.ItemsSource = deviceInfo;
+                DeviceInfoPage.UpdateControls();
 
                 // get apps
-                await Task.Run(new Action(GetAppsThread));
-                installedAppsListView.ItemsSource = apps;
+                await Task.Run(new Action(AppsPage.GetAppsThread));
+                AppsPage.installedAppsListView.ItemsSource = AppsPage.apps;
 
-                // load fs to listbox (do not)
-                //firmwareListView.ItemsSource = fws["devices"][deviceInfo["Identifier"]]["firmwares"];
+                // refresh firmware
+                //refreshFirmwareButton_Click(null, null);
 
                 // afc
-                afcPathTextBox.Text = afcPath;
-                try
-                {
-                    afc.afc_read_directory(afcHandle, afcPath, out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
-                    afcItemsListBox.ItemsSource = afcDirectory;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
+                AFCPage.Init();
             }
             else if (recoveryConnected)
             {
-                deviceInfoGroupBox.Header = "Recovery Mode";
-                recoveryModeToggleButton.Content = "Exit Recovery";
-                powerOffDeviceButton.IsEnabled = false;
-                rebootDeviceButton.IsEnabled = false;
+                DeviceInfoPage.SetRecovery();
 
                 // awful
                 using (Process p = new Process())
@@ -382,7 +327,7 @@ namespace iSuite
                     }
                 }
 
-                deviceInfoListView.ItemsSource = deviceInfo;
+                DeviceInfoPage.UpdateControls();
 
                 appsTab.IsEnabled = false;
                 fileSystemTab.IsEnabled = false;
@@ -391,16 +336,12 @@ namespace iSuite
             }
             else if (dfuConnected)
             {
-                deviceInfoGroupBox.Header = "DFU Mode";
-                recoveryModeToggleButton.Content = "-------";
-                recoveryModeToggleButton.IsEnabled = false;
-                powerOffDeviceButton.IsEnabled = false;
-                rebootDeviceButton.IsEnabled = false;
+                DeviceInfoPage.SetDFU();
 
                 appsTab.IsEnabled = false;
                 fileSystemTab.IsEnabled = false;
                 jailbreakTab.IsEnabled = false;
-                restoreTab.IsEnabled = true;
+                restoreTab.IsEnabled = false;
             }
             if (!recoveryConnected && !normalConnected && !dfuConnected)
             {
@@ -410,222 +351,18 @@ namespace iSuite
                 fileSystemTab.IsEnabled = false;
                 jailbreakTab.IsEnabled = false;
                 restoreTab.IsEnabled = false;
+                mainTabControl.SelectedItem = settingsTab;
             }
 
             mainTabControl.Visibility = Visibility.Visible;
             ProbeTimer.Enabled = true;
         }
 
-        private async void installNewAppButton_Click(object sender, RoutedEventArgs e)
-        {
-            var openIPAFile = new Microsoft.Win32.OpenFileDialog();
-            openIPAFile.FileName = "app";
-            openIPAFile.DefaultExt = ".ipa";
-            openIPAFile.Filter = "iOS Apps (.ipa)|*.ipa";
-
-            openIPAFile.ShowDialog();
-
-            ipaPath = openIPAFile.FileName;
-
-            appInstallStatusListBox.Items.Clear();
-
-            appInstallStatusListBox.Items.Add($"Attempting install of {ipaPath}");
-            await Task.Run(new Action(InstallAppThread));
-        }
-
-        private void removeSelectedAppButton_Click(object sender, RoutedEventArgs e)
-        {
-            selectedBundleID = ((DeviceApp)installedAppsListView.SelectedItem).CFBundleIdentifier;
-
-            appInstallStatusListBox.Items.Add($"Attempting removal of of {selectedBundleID}");
-            var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
-            var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
-            scrollViewer.ScrollToBottom();
-            Task.Run(new Action(RemoveAppThread));
-        }
-
-        private void InstallAppThread()
-        {
-            var proc = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "ideviceinstaller.exe",
-                    Arguments = $"-u {deviceUDID} --install \"{ipaPath}\"",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
-            proc.Start();
-            while (!proc.StandardOutput.EndOfStream && !proc.StandardError.EndOfStream)
-            {
-                string line = proc.StandardOutput.ReadLine();
-                if (line == null || line.Trim() == "") line = proc.StandardError.ReadLine();
-                Dispatcher.Invoke(() =>
-                {
-                    appInstallStatusListBox.Items.Add(line);
-                    var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
-                    var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
-                    scrollViewer.ScrollToBottom();
-                });
-            }
-            Dispatcher.Invoke(() =>
-            {
-                appInstallStatusListBox.Items.Add($"Process ended with code {proc.ExitCode} {(proc.ExitCode == 0 ? "(Success)" : "")}");
-                var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
-                var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
-                scrollViewer.ScrollToBottom();
-                Task.Run(new Action(GetAppsThread));
-                installedAppsListView.ItemsSource = null;
-                installedAppsListView.ItemsSource = apps;
-            });
-        }
-
-        private void RemoveAppThread()
-        {
-            var proc = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "ideviceinstaller.exe",
-                    Arguments = $"-u {deviceUDID} --uninstall \"{selectedBundleID}\"",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
-            proc.Start();
-            while (!proc.StandardOutput.EndOfStream && !proc.StandardError.EndOfStream)
-            {
-                string line = proc.StandardOutput.ReadLine();
-                if (line == null || line.Trim() == "") line = proc.StandardError.ReadLine();
-                Dispatcher.Invoke(() =>
-                {
-                    appInstallStatusListBox.Items.Add(line);
-                    var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
-                    var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
-                    scrollViewer.ScrollToBottom();
-                });
-            }
-            Dispatcher.Invoke(() =>
-            {
-                appInstallStatusListBox.Items.Add($"Process ended with code {proc.ExitCode} {(proc.ExitCode == 0 ? "(Success)" : "")}");
-                var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
-                var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
-                scrollViewer.ScrollToBottom();
-                Task.Run(new Action(GetAppsThread));
-                installedAppsListView.ItemsSource = null;
-                installedAppsListView.ItemsSource = apps;
-            });
-        }
-
-        private void GetAppsThread()
-        {
-            var proc = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "ideviceinstaller.exe",
-                    Arguments = $"-u {deviceUDID} -l",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true
-                }
-            };
-            proc.Start();
-            apps.Clear();
-            while (!proc.StandardOutput.EndOfStream)
-            {
-                string line = proc.StandardOutput.ReadLine();
-                if (line == null || line.Trim() == "" || line.Contains("CFBundleIdentifier, CFBundleVersion, CFBundleDisplayName")) continue;
-                apps.Add(new DeviceApp()
-                {
-                    CFBundleIdentifier = line.Split(',')[0],
-                    CFBundleVersion = line.Split(',')[1].Trim().Replace("\"", ""),
-                    CFBundleDisplayName = line.Split(',')[2].Trim().Replace("\"", ""),
-                });
-            }
-            if (!proc.HasExited) proc.Kill();
-        }
-        private void RestoreThread()
-        {
-            var proc = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = $"idevicerestore.exe",
-                    Arguments = $"--erase -u -y {deviceInfo["UDID"]} \"{ipswPath}\"",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
-            proc.Start();
-            while (!proc.StandardOutput.EndOfStream && !proc.StandardError.EndOfStream)
-            {
-                string line = proc.StandardOutput.ReadLine();
-                if (line == null || line.Trim() == "") line = proc.StandardError.ReadLine();
-                Dispatcher.Invoke(() =>
-                {
-                    restoreStatusListBox.Items.Add(line);
-                });
-            }
-        }
-
-        private void refreshFirmwareButton_Click(object sender, RoutedEventArgs e)
-        {
-            using (WebClient wc = new WebClient())
-            {
-                firmwareListView.ItemsSource = JObject.Parse(wc.DownloadString(new Uri($"{options.IPSWApiSource}/device/{deviceInfo["Identifier"]}?type=ipsw")))["firmwares"];
-            }
-        }
-
-        private async void restoreFirmwareButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (MessageBox.Show("Restoring your device will erase ALL information\nPlease ensure that you are signed out of iCloud/Find My is disabled\nContinue?", "WARNING!", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
-            if (firmwareListView.SelectedItem == null)
-            {
-                restoreStatusListBox.Items.Add("Please select a firmware");
-                return;
-            }
-            Firmware selectedFW = JsonConvert.DeserializeObject<Firmware>(((JObject)firmwareListView.SelectedItem).ToString());
-            if (selectedFW.version.StartsWith("1.") || selectedFW.version.StartsWith("2."))
-            {
-                MessageBox.Show("Restoring to iOS 1 and 2 is not supported.", "Error!");
-                return;
-            }
-            if (!File.Exists($"{options.TempDataLocation}/{selectedFW.identifier}-{selectedFW.buildid}.ipsw"))
-            {
-                restoreStatusListBox.Items.Add($"Downloading iOS {selectedFW.version} for {deviceInfo["Identifier"]}");
-                using (WebClient wc = new WebClient())
-                {
-                    wc.DownloadFile(new Uri(selectedFW.url), $"{options.TempDataLocation}/{selectedFW.identifier}-{selectedFW.buildid}.ipsw");
-                }
-                restoreStatusListBox.Items.Add($"Download complete.");
-            }
-            if (Util.CalculateMD5($"{options.TempDataLocation}/{selectedFW.identifier}-{selectedFW.buildid}.ipsw") != selectedFW.md5sum)
-            {
-                restoreStatusListBox.Items.Add("File hash verification failed.");
-                return;
-            }
-            ipswPath = $"{options.TempDataLocation}/{selectedFW.identifier}-{selectedFW.buildid}.ipsw";
-            await Task.Run(new Action(RestoreThread));
-            MessageBox.Show("Please restart the application.");
-        }
-        private async void continueWithoutDeviceButton_Click(object sender, RoutedEventArgs e)
-        {
-            await Init();
-        }
-
+        #region Settings Tab
         private void resetSettingsButton_Click(object sender, RoutedEventArgs e)
         {
             options = new OptionsJson();
-            ipswApiTextBox.Text = options.IPSWApiSource;
-            jailbreakApiTextBox.Text = options.JailbreakAPISource;
+            ApiTextBox.Text = options.APISource;
             darkModeCheckBox.IsChecked = options.DarkMode;
             tempDataLocTextBox.Text = options.TempDataLocation;
             languageComboBox.SelectedIndex = options.Language;
@@ -633,351 +370,87 @@ namespace iSuite
             File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(options));
         }
 
-        private void addRepoButton_Click(object sender, RoutedEventArgs e)
+        private void creditsButton_Click(object sender, RoutedEventArgs e)
         {
-            string repo = addRepoTextBox.Text;
-            repo = repo.Trim();
-            if (repo == "" || repo == null) return;
-            if (!repo.StartsWith("http://") && !repo.StartsWith("https://")) repo = "http://" + repo;
-            if (!repo.EndsWith("/")) repo += "/";
-            repoListBox.Items.Add(repo);
-            options.PackageManagerRepos.Add(repo);
-            File.WriteAllText(dataLocation + "options.json", JsonConvert.SerializeObject(options));
-            addRepoTextBox.Text = null;
+            MessageBox.Show("iSuite by KawaiiZenbo\nBased on LibiMobileDevice\nIPSW API by ipsw.me\nJailbreak API by littlebyte", "About iSuite");
         }
 
-        private void repoListBox_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void saveSettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            if (repoListBox.SelectedItem.ToString() == null) return;
-            string link = repoListBox.SelectedItem.ToString();
-            WebClient webClient = new WebClient();
-            // headers because some repos are 'interesting'
-            webClient.Headers.Add("X-Machine", "iPod4,1");
-            webClient.Headers.Add("X-Unique-ID", "0000000000000000000000000000000000000000");
-            webClient.Headers.Add("X-Firmware", "6.1");
-            webClient.Headers.Add("User-Agent", "Telesphoreo APT-HTTP/1.0.999");
-            // Attempt to download packages file (try/catch hell)
-            try
-            {
-                MemoryStream packagesBz2 = new MemoryStream(webClient.DownloadData(link + "Packages.bz2"));
-                FileStream packagesBz2Decompressed = File.Create(dataLocation + "temp/Packages");
-                BZip2.Decompress(packagesBz2, packagesBz2Decompressed, true);
-            }
-            catch (Exception)
-            {
-                try
-                {
-                    MemoryStream packagesGz = new MemoryStream(webClient.DownloadData(link + "Packages.bz2"));
-                    FileStream packagesGzDecompressed = File.Create(dataLocation + "temp/Packages");
-                    GZip.Decompress(packagesGz, packagesGzDecompressed, true);
-                }
-                catch (Exception)
-                {
-                    try
-                    {
-                        webClient.DownloadFile(link + "Packages", dataLocation + "temp/Packages");
-                    }
-                    catch (Exception)
-                    {
-                        throw;
-                    }
-                }
-            }
-            Thread.Sleep(500);
-            // Clean list of package links, names, and versions
-            List<DebPackage> packages = new List<DebPackage>();
-            Regex rx = new Regex(@"\n\n+", RegexOptions.Compiled);
-            foreach (string s in rx.Split(File.ReadAllText(dataLocation + "temp/Packages")))
-            {
-                string packageID = "";
-                string version = "";
-                string arch = "";
-                string fileName = "";
-                string md5 = "";
-                string author = "";
-                string name = "";
-                foreach (string s2 in s.Split('\n'))
-                {
-                    if (s2.StartsWith("Package: "))
-                    {
-                        packageID = s2.Remove(0, 8).Trim();
-                    }
-                    else if (s2.StartsWith("Version: "))
-                    {
-                        version = s2.Remove(0, 8).Trim();
-                    }
-                    else if (s2.StartsWith("Architecture: "))
-                    {
-                        arch = s2.Remove(0, 13).Trim();
-                    }
-                    else if (s2.StartsWith("Filename: "))
-                    {
-                        fileName = s2.Remove(0, 9).Trim();
-                    }
-                    else if (s2.StartsWith("MD5sum: "))
-                    {
-                        md5 = s2.Remove(0, 7).Trim();
-                    }
-                    else if (s2.StartsWith("Author: "))
-                    {
-                        author = s2.Remove(0, 7).Trim();
-                    }
-                    else if (s2.StartsWith("Name: "))
-                    {
-                        name = s2.Remove(0, 5).Trim();
-                    }
-                }
-                packages.Add(new DebPackage()
-                {
-                    Package = packageID,
-                    Version = version,
-                    Author = author,
-                    Name = name,
-                    MD5Sum = md5,
-                    Architecture = arch,
-                    Filename = fileName
-                });
-            }
-            // remove last one because bunch of line feeds at the end
-            packages.RemoveAt(packages.Count - 1);
-            packagesListView.ItemsSource = packages;
-            packagesLVGB.Header = link;
+            options.APISource = ApiTextBox.Text;
+            options.DarkMode = (bool)darkModeCheckBox.IsChecked;
+            options.TempDataLocation = tempDataLocTextBox.Text;
+            options.Language = languageComboBox.SelectedIndex;
+            options.ColorScheme = colorSchemeComboBox.SelectedIndex;
+            File.WriteAllText(dataLocation + "/options.json", JsonConvert.SerializeObject(options));
         }
 
-        private void removeSelectedRepoButton_Click(object sender, RoutedEventArgs e)
+        private void darkModeCheckBox_Checked(object sender, RoutedEventArgs e)
         {
-            repoListBox.Items.Remove(repoListBox.SelectedItem);
+
         }
 
-        private void packagesListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void colorSchemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var saveDebFile = new Microsoft.Win32.SaveFileDialog();
-            saveDebFile.FileName = $"{((DebPackage)packagesListView.SelectedItem).Package}-{((DebPackage)packagesListView.SelectedItem).Version}.deb";
-            saveDebFile.DefaultExt = ".deb";
-            saveDebFile.Filter = "Debian/APT Packages|*.deb";
-
-            saveDebFile.ShowDialog();
-
-            string saveDebPath = saveDebFile.FileName;
-
-            string link = ((DebPackage)packagesListView.SelectedItem).Filename;
-
-            if (!((DebPackage)packagesListView.SelectedItem).Filename.StartsWith("http://"))
+            switch (colorSchemeComboBox.SelectedIndex)
             {
-                link = packagesLVGB.Header + link;
-            }
-            using (WebClient wc = new WebClient())
-            {
-                wc.DownloadFileAsync(new Uri(link), saveDebPath);
+                case 0:
+                    window.Background = SystemParameters.WindowGlassBrush;
+                    DeviceInfoPage.SetBarColors((SolidColorBrush)SystemParameters.WindowGlassBrush);
+                    topBarGrid.Background = SystemParameters.WindowGlassBrush;
+                    break;
+                case 1:
+                    window.Background = new SolidColorBrush(Colors.DodgerBlue);
+                    DeviceInfoPage.SetBarColors(new SolidColorBrush(Colors.DodgerBlue));
+                    topBarGrid.Background = new SolidColorBrush(Colors.DodgerBlue);
+                    break;
+                case 2:
+                    window.Background = new SolidColorBrush(Colors.Chartreuse);
+                    DeviceInfoPage.SetBarColors(new SolidColorBrush(Colors.Chartreuse));
+                    topBarGrid.Background = new SolidColorBrush(Colors.Chartreuse);
+                    break;
+                case 3:
+                    window.Background = new SolidColorBrush(Colors.MediumOrchid);
+                    DeviceInfoPage.SetBarColors(new SolidColorBrush(Colors.MediumOrchid));
+                    topBarGrid.Background = new SolidColorBrush(Colors.MediumOrchid);
+                    break;
+                case 4:
+                    window.Background = new SolidColorBrush(Colors.Coral);
+                    DeviceInfoPage.SetBarColors(new SolidColorBrush(Colors.Coral));
+                    topBarGrid.Background = new SolidColorBrush(Colors.Coral);
+                    break;
+                case 5:
+                    window.Background = new SolidColorBrush(Colors.Pink);
+                    DeviceInfoPage.SetBarColors(new SolidColorBrush(Colors.Pink));
+                    topBarGrid.Background = new SolidColorBrush(Colors.Pink);
+                    break;
+                default:
+                    break;
             }
         }
+        #endregion
 
-        private void powerOffDeviceButton_Click(object sender, RoutedEventArgs e)
+        #region Window Functions
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            using (Process p = new Process())
-            {
-                p.StartInfo.FileName = "idevicediagnostics.exe";
-                p.StartInfo.Arguments = "shutdown";
-                p.StartInfo.CreateNoWindow = true;
-                p.Start();
-                p.WaitForExit();
-            }
-            MessageBox.Show("Please restart the application.");
+            mainTabControl.Visibility = Visibility.Hidden;
+
+            // set options controls to options
+            ApiTextBox.Text = options.APISource;
+            tempDataLocTextBox.Text = options.TempDataLocation;
+            darkModeCheckBox.IsChecked = options.DarkMode;
+            languageComboBox.SelectedIndex = options.Language;
+            colorSchemeComboBox.SelectedIndex = options.ColorScheme;
+
+            // check for them until you dont need to check for them anymore
+            await Task.Run(new Action(DeviceDetectorThread));
+            await Init();
         }
 
-        private void recoveryModeToggleButton_Click(object sender, RoutedEventArgs e)
+        private async void continueWithoutDeviceButton_Click(object sender, RoutedEventArgs e)
         {
-            if (normalConnected)
-            {
-                lockdown.lockdownd_enter_recovery(lockdownHandle);
-                MessageBox.Show("Please restart the application.");
-            }
-            else
-            {
-                using (Process p = new Process())
-                {
-                    p.StartInfo.FileName = "irecovery.exe";
-                    p.StartInfo.Arguments = "-n";
-                    p.StartInfo.CreateNoWindow = true;
-                    p.Start();
-                    p.WaitForExit();
-                }
-                MessageBox.Show("Please restart the application.");
-            }
-        }
-
-        private void rebootDeviceButton_Click(object sender, RoutedEventArgs e)
-        {
-            using (Process p = new Process())
-            {
-                p.StartInfo.FileName = "idevicediagnostics.exe";
-                p.StartInfo.Arguments = "restart";
-                p.StartInfo.CreateNoWindow = true;
-                p.Start();
-                p.WaitForExit();
-            }
-            MessageBox.Show("Please restart the application.");
-        }
-
-        private void refreshAppListButton_Click(object sender, RoutedEventArgs e)
-        {
-            Task.Run(new Action(GetAppsThread));
-            installedAppsListView.ItemsSource = null;
-            installedAppsListView.ItemsSource = apps;
-            appInstallStatusListBox.Items.Add("Refreshed.");
-            var border = (Border)VisualTreeHelper.GetChild(appInstallStatusListBox, 0);
-            var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
-            scrollViewer.ScrollToBottom();
-        }
-
-        private void afcGoButton_Click(object sender, RoutedEventArgs e)
-        {
-            afcPath = afcPathTextBox.Text;
-            try
-            {
-                afc.afc_read_directory(afcHandle, afcPath, out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void afcListBox_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (afcItemsListBox.SelectedItem.ToString() == ".") return;
-            try
-            {
-                afc.afc_read_directory(afcHandle, afcPath + $"/{afcItemsListBox.SelectedItem}/", out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
-                if (afcItemsListBox.SelectedItem.ToString() == "..")
-                {
-                    afcPath = afcPath.Replace('/' + afcPath.TrimEnd('/').Split('/').Last(), "");
-                }
-                else
-                {
-                    afcPath += $"{afcItemsListBox.SelectedItem}/";
-                }
-                afcPathTextBox.Text = afcPath;
-                afcItemsListBox.ItemsSource = null;
-                afcItemsListBox.ItemsSource = afcDirectory;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void afcUploadFileButton_Click(object sender, RoutedEventArgs e)
-        {
-            var openAfcUploadFile = new Microsoft.Win32.OpenFileDialog();
-
-            openAfcUploadFile.ShowDialog();
-
-            if (openAfcUploadFile.FileName == "") return;
-
-            string afcUploadFilePath = openAfcUploadFile.FileName;
-
-            string afcUploadFileName = afcUploadFilePath.Split('\\').Last();
-
-            ulong handle = 0UL;
-            afc.afc_file_open(afcHandle, afcPath + "/" + afcUploadFileName, AfcFileMode.FopenRw, ref handle);
-            byte[] array = File.ReadAllBytes(afcUploadFilePath);
-            uint bytesWritten = 0U;
-            afc.afc_file_write(afcHandle, handle, array, (uint)array.Length, ref bytesWritten);
-            afc.afc_file_close(afcHandle, handle);
-            afcRefreshButton_Click(sender, e);
-        }
-
-        private void afcRefreshButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                afc.afc_read_directory(afcHandle, afcPath, out ReadOnlyCollection<string> afcDirectory).ThrowOnError();
-                afcItemsListBox.ItemsSource = null;
-                afcItemsListBox.ItemsSource = afcDirectory;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void afcMKDirButton_Click(object sender, RoutedEventArgs e)
-        {
-            GenericSingleInputForm f = new GenericSingleInputForm();
-            f.Title = "Make Directory";
-            f.LabelText = "Please enter the name for the new directory.";
-            f.ShowDialog();
-            afc.afc_make_directory(afcHandle, afcPath + "/" + f.TextBoxContents);
-            afcRefreshButton_Click(sender, e);
-        }
-
-        private void afcConnectAfc2Button_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                // idk this causes issues sometimes blame libusbmuxd
-                lockdown.lockdownd_start_service(lockdownHandle, "com.apple.afc2", out lockdownServiceHandle).ThrowOnError();
-                lockdownHandle.Api.Afc.afc_client_new(deviceHandle, lockdownServiceHandle, out afcHandle).ThrowOnError();
-                afcPath = "/";
-                afcPathTextBox.Text = afcPath;
-                afcRefreshButton_Click(sender, e);
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Could not connect to afc2");
-            }
-        }
-
-        private void afcDeleteSelectedButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                afc.afc_remove_path(afcHandle, afcPath + $"/{afcItemsListBox.SelectedItem}").ThrowOnError();
-                afcRefreshButton_Click(sender, e);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Could not delete object");
-            }
-        }
-
-        private void afcDownloadFileButton_Click(object sender, RoutedEventArgs e)
-        {
-            var saveAfcFile = new Microsoft.Win32.SaveFileDialog();
-            saveAfcFile.FileName = afcItemsListBox.SelectedItem.ToString();
-
-            saveAfcFile.ShowDialog();
-
-            string afcSaveFilePath = saveAfcFile.FileName;
-            string afcFilePath = afcPath + "/" + afcItemsListBox.SelectedItem.ToString();
-            afc.afc_get_file_info(afcHandle, afcFilePath, out ReadOnlyCollection<string> infoListr);
-            List<string> infoList = new List<string>(infoListr.ToArray());
-            long fileSize = Convert.ToInt64(infoList[infoList.FindIndex(x => x == "st_size") + 1]);
-
-            ulong fileHandle = 0;
-            afc.afc_file_open(afcHandle, afcFilePath, AfcFileMode.FopenRdonly, ref fileHandle);
-
-            FileStream fileStream = File.Create(afcSaveFilePath);
-            const int bufferSize = 4194304;
-            for (int i = 0; i < fileSize / bufferSize + 1; i++)
-            {
-                uint bytesRead = 0;
-
-                long remainder = fileSize - i * bufferSize;
-                int currBufferSize = remainder >= bufferSize ? bufferSize : (int)remainder;
-                byte[] currBuffer = new byte[currBufferSize];
-
-                if ((afc.afc_file_read(afcHandle, fileHandle, currBuffer, Convert.ToUInt32(currBufferSize), ref bytesRead))
-                    != AfcError.Success)
-                {
-                    afc.afc_file_close(afcHandle, fileHandle);
-                }
-
-                fileStream.Write(currBuffer, 0, currBufferSize);
-            }
-
-            fileStream.Close();
+            shouldStopDetecting = true;
+            await Init();
         }
 
         private void closeButton_Click(object sender, RoutedEventArgs e)
@@ -1006,103 +479,10 @@ namespace iSuite
             }
         }
 
-        private void sensitiveInfoToggleButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (sensitiveInfoShown)
-            {
-                deviceInfoListView.ItemsSource = stDeviceInfo;
-                sensitiveInfoShown = false;
-                sensitiveInfoToggleButton.Content = "Show sensitive info";
-            }
-            else
-            {
-                deviceInfoListView.ItemsSource = deviceInfo;
-                sensitiveInfoShown = true;
-                sensitiveInfoToggleButton.Content = "Hide sensitive info";
-            }
-        }
-
-        private void openiDeviceLogButton_Click(object sender, RoutedEventArgs e)
-        {
-            using (Process p = new Process())
-            {
-                p.StartInfo.FileName = "idevicesyslog.exe";
-                p.StartInfo.Arguments = "-u" + deviceUDID;
-                p.StartInfo.CreateNoWindow = true;
-                p.Start();
-                p.WaitForExit();
-            }
-        }
-
-        private void creditsButton_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("iSuite by KawaiiZenbo\nBased on LibiMobileDevice\nIPSW API by ipsw.me\nJailbreak API by littlebyte", "About iSuite");
-        }
-
-        private void saveSettingsButton_Click(object sender, RoutedEventArgs e)
-        {
-            options.IPSWApiSource = ipswApiTextBox.Text;
-            options.JailbreakAPISource = jailbreakApiTextBox.Text;
-            options.DarkMode = (bool)darkModeCheckBox.IsChecked;
-            options.TempDataLocation = tempDataLocTextBox.Text;
-            options.Language = languageComboBox.SelectedIndex;
-            options.ColorScheme = colorSchemeComboBox.SelectedIndex;
-            File.WriteAllText(dataLocation + "/options.json", JsonConvert.SerializeObject(options));
-        }
-
-        private void darkModeCheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            
-        }
-
-        private void colorSchemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            switch (colorSchemeComboBox.SelectedIndex)
-            {
-                case 0:
-                    window.Background = SystemParameters.WindowGlassBrush;
-                    systemStorageProgressBar.Foreground = SystemParameters.WindowGlassBrush;
-                    dataStorageProgressBar.Foreground = SystemParameters.WindowGlassBrush;
-                    topBarGrid.Background = SystemParameters.WindowGlassBrush;
-                    break;
-                case 1:
-                    window.Background = new SolidColorBrush(Colors.DodgerBlue);
-                    systemStorageProgressBar.Foreground = new SolidColorBrush(Colors.DodgerBlue);
-                    dataStorageProgressBar.Foreground = new SolidColorBrush(Colors.DodgerBlue);
-                    topBarGrid.Background = new SolidColorBrush(Colors.DodgerBlue);
-                    break;
-                case 2:
-                    window.Background = new SolidColorBrush(Colors.Chartreuse);
-                    systemStorageProgressBar.Foreground = new SolidColorBrush(Colors.Chartreuse);
-                    dataStorageProgressBar.Foreground = new SolidColorBrush(Colors.Chartreuse);
-                    topBarGrid.Background = new SolidColorBrush(Colors.Chartreuse);
-                    break;
-                case 3:
-                    window.Background = new SolidColorBrush(Colors.MediumOrchid);
-                    systemStorageProgressBar.Foreground = new SolidColorBrush(Colors.MediumOrchid);
-                    dataStorageProgressBar.Foreground = new SolidColorBrush(Colors.MediumOrchid);
-                    topBarGrid.Background = new SolidColorBrush(Colors.MediumOrchid);
-                    break;
-                case 4:
-                    window.Background = new SolidColorBrush(Colors.Coral);
-                    systemStorageProgressBar.Foreground = new SolidColorBrush(Colors.Coral);
-                    dataStorageProgressBar.Foreground = new SolidColorBrush(Colors.Coral);
-                    topBarGrid.Background = new SolidColorBrush(Colors.Coral);
-                    break;
-                case 5:
-                    window.Background = new SolidColorBrush(Colors.Pink);
-                    systemStorageProgressBar.Foreground = new SolidColorBrush(Colors.Pink);
-                    dataStorageProgressBar.Foreground = new SolidColorBrush(Colors.Pink);
-                    topBarGrid.Background = new SolidColorBrush(Colors.Pink);
-                    break;
-                default:
-                    break;
-            }
-        }
-
         private void minimizeButton_Click(object sender, RoutedEventArgs e)
         {
             WindowState = WindowState.Minimized;
         }
+        #endregion
     }
 }

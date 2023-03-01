@@ -1,0 +1,20 @@
+﻿<UserControl x:Class="iSuite.AFCPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:iSuite"
+             mc:Ignorable="d" 
+             d:DesignHeight="684" d:DesignWidth="684">
+    <Grid Background="#FFE5E5E5">
+        <TextBox x:Name="afcPathTextBox" HorizontalAlignment="Left" Margin="65,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="574" Height="25"/>
+        <Button x:Name="afcGoButton" Content="Go" HorizontalAlignment="Left" Margin="644,10,0,0" VerticalAlignment="Top" Height="25" Width="30" Click="afcGoButton_Click"/>
+        <Button x:Name="afcUploadFileButton" Content="Upload File" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top" Height="25" Width="100" Click="afcUploadFileButton_Click"/>
+        <Button x:Name="afcRefreshButton" Content="Refresh" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="25" Width="50" Click="afcRefreshButton_Click"/>
+        <Button x:Name="afcMKDirButton" Content="Make Directory" HorizontalAlignment="Left" Margin="325,40,0,0" VerticalAlignment="Top" Height="25" Width="100" Click="afcMKDirButton_Click"/>
+        <Button x:Name="afcDownloadFileButton" Content="Download File" HorizontalAlignment="Left" Margin="115,40,0,0" VerticalAlignment="Top" Height="25" Width="100" Click="afcDownloadFileButton_Click"/>
+        <Button x:Name="afcDeleteSelectedButton" Content="Delete Selected" HorizontalAlignment="Left" Margin="430,40,0,0" VerticalAlignment="Top" Height="25" Width="100" Click="afcDeleteSelectedButton_Click"/>
+        <Button x:Name="afcConnectAfc2Button" Content="Connect AFC2" HorizontalAlignment="Left" Margin="220,40,0,0" VerticalAlignment="Top" Width="100" Height="25" Click="afcConnectAfc2Button_Click"/>
+        <ListBox x:Name="afcItemsListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,70,10,10" MouseDoubleClick="afcListBox_MouseDoubleClick"/>
+    </Grid>
+</UserControl>

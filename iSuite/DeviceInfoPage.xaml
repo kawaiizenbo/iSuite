@@ -1,0 +1,49 @@
+﻿<UserControl x:Class="iSuite.DeviceInfoPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:iSuite"
+             mc:Ignorable="d" 
+             d:DesignHeight="684" d:DesignWidth="684">
+    <Grid Background="#FFE5E5E5">
+        <GroupBox x:Name="deviceInfoGroupBox" Header="Loading...">
+            <Grid>
+                <GroupBox x:Name="deviceStorageGroupBox" Header="Device Storage (0B Total)" Margin="10,0,10,50" Height="84" VerticalAlignment="Bottom">
+                    <Grid>
+                        <Grid HorizontalAlignment="Left" Width="326">
+                            <Label x:Name="systemStorageLabel" Content="System (0B Total)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"/>
+                            <Label x:Name="systemStorageFreeLabel" Content="0B Free" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                            <ProgressBar x:Name="systemStorageProgressBar" Margin="10,26,10,0" SmallChange="1" Foreground="{x:Static SystemParameters.WindowGlassBrush}" VerticalAlignment="Top" Height="25"/>
+                        </Grid>
+                        <Grid HorizontalAlignment="Right" Width="326">
+                            <Label x:Name="dataStorageLabel" Content="Data (0B Free)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"/>
+                            <Label x:Name="dataStorageFreeLabel" Content="0B Free" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                            <ProgressBar x:Name="dataStorageProgressBar" SmallChange="1" Foreground="{x:Static SystemParameters.WindowGlassBrush}" Margin="10,26,10,10" Height="25" VerticalAlignment="Top"/>
+                        </Grid>
+                    </Grid>
+                </GroupBox>
+                <GroupBox Header="Device Information" Margin="10,10,10,140">
+                    <Grid>
+                        <ListView x:Name="deviceInfoListView" HorizontalAlignment="Stretch" Margin="5,5,5,5" MouseDoubleClick="deviceInfoListView_MouseDoubleClick">
+                            <ListView.Foreground>
+                                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.InfoTextColorKey}}"/>
+                            </ListView.Foreground>
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Attribute" DisplayMemberBinding="{Binding Key}" Width="150"/>
+                                    <GridViewColumn Header="Value (Double-Click to copy)" DisplayMemberBinding="{Binding Value}" Width="400"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </Grid>
+                </GroupBox>
+                <Button x:Name="powerOffDeviceButton" Content="Power Off" HorizontalAlignment="Left" Margin="20,0,0,10" VerticalAlignment="Bottom" Width="100" Height="30" Click="powerOffDeviceButton_Click" FontSize="11"/>
+                <Button x:Name="rebootDeviceButton" Content="Reboot" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="100" Height="30" Click="rebootDeviceButton_Click" Margin="125,0,0,10" FontSize="11"/>
+                <Button x:Name="recoveryModeToggleButton" Content="Enter Recovery" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="30" Width="100" Click="recoveryModeToggleButton_Click" Margin="0,0,342,10" FontSize="11"/>
+                <Button x:Name="sensitiveInfoToggleButton" Content="Hide sensitive info" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="30" Width="100" Margin="0,0,237,10" FontSize="11" Click="sensitiveInfoToggleButton_Click"/>
+                <Button x:Name="openiDeviceLogButton" Content="Open SysLog" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="30" Width="100" Margin="0,0,132,10" FontSize="11" Click="openiDeviceLogButton_Click"/>
+            </Grid>
+        </GroupBox>
+    </Grid>
+</UserControl>

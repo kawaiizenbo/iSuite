@@ -1,0 +1,30 @@
+﻿<UserControl x:Class="iSuite.AppsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:iSuite"
+             mc:Ignorable="d" 
+             d:DesignHeight="684" d:DesignWidth="684">
+    <Grid Background="#FFE5E5E5">
+        <Button x:Name="installNewAppButton" Content="Install New" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="30" Width="100" Click="installNewAppButton_Click"/>
+        <ListBox x:Name="appInstallStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,394,10,45" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <ListView x:Name="installedAppsListView" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,10,10,0" VerticalAlignment="Top" Height="379" Foreground="Black">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="App Name" DisplayMemberBinding="{Binding CFBundleDisplayName}"/>
+                    <GridViewColumn Header="Version" DisplayMemberBinding="{Binding CFBundleVersion}"/>
+                    <GridViewColumn Header="Bundle ID" DisplayMemberBinding="{Binding CFBundleIdentifier}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Button x:Name="refreshAppListButton" Content="Refresh" HorizontalAlignment="Left" Margin="220,0,0,10" VerticalAlignment="Bottom" Width="100" Height="30" Click="refreshAppListButton_Click"/>
+        <Button x:Name="removeSelectedAppButton" Content="Remove Selected" HorizontalAlignment="Left" Margin="115,0,0,10" VerticalAlignment="Bottom" Width="100" Height="30" Click="removeSelectedAppButton_Click"/>
+    </Grid>
+</UserControl>

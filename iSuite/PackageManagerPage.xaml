@@ -1,0 +1,33 @@
+﻿<UserControl x:Class="iSuite.PackageManagerPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:iSuite"
+             mc:Ignorable="d" 
+             d:DesignHeight="684" d:DesignWidth="684">
+    <Grid Background="#FFE5E5E5">
+        <GroupBox Header="Repos" Margin="10,10,444,10">
+            <Grid>
+                <Button x:Name="addRepoButton" Content="Add Repo" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="20" Click="addRepoButton_Click" Margin="5,0,5,30"/>
+                <TextBox x:Name="addRepoTextBox" HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="http://" VerticalAlignment="Bottom" Height="20" Margin="5,0,5,55"/>
+                <Button x:Name="removeSelectedRepoButton" Content="Remove Selected Repo" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="20" Margin="5,0,5,5" Click="removeSelectedRepoButton_Click"/>
+                <ListBox x:Name="repoListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="5,5,5,83" MouseDoubleClick="repoListBox_MouseDoubleClick"/>
+            </Grid>
+        </GroupBox>
+        <GroupBox x:Name="packagesLVGB" Header="Packages" Margin="245,10,10,10">
+            <Grid>
+                <ListView x:Name="packagesListView" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="5,5,5,5" MouseDoubleClick="packagesListView_MouseDoubleClick">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn x:Name="packageNameColumn" Header="Package Name" DisplayMemberBinding="{Binding Name}"/>
+                            <GridViewColumn x:Name="packageIdColumn" Header="Package ID" DisplayMemberBinding="{Binding Package}"/>
+                            <GridViewColumn x:Name="developerColumn" Header="Developer" DisplayMemberBinding="{Binding Author}"/>
+                            <GridViewColumn x:Name="versionColumn" Header="Version" DisplayMemberBinding="{Binding Version}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
+        </GroupBox>
+    </Grid>
+</UserControl>
