@@ -83,16 +83,6 @@ namespace iSuite {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        public static byte[] Locale_test {
-            get {
-                object obj = ResourceManager.GetObject("Locale_test", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
         public static byte[] Locale_tok {
             get {
                 object obj = ResourceManager.GetObject("Locale_tok", resourceCulture);
