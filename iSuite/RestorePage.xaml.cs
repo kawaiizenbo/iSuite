@@ -19,6 +19,17 @@ namespace iSuite
             InitializeComponent();
         }
 
+        public void LoadLanguage()
+        {
+            versionColumn.Header = (string)MainWindow.languageTable["version"];
+            buildIDColumn.Header = (string)MainWindow.languageTable["buildID"];
+            signedColumn.Header = (string)MainWindow.languageTable["signed"];
+            releaseDateColumn.Header = (string)MainWindow.languageTable["releaseDateColumn"];
+            refreshFirmwareButton.Content = (string)MainWindow.languageTable["refresh"];
+            restoreFirmwareButton.Content = (string)MainWindow.languageTable["restore"];
+            checkDownloadedButton.Content = (string)MainWindow.languageTable["checkDownloadedIPSWs"];
+        }
+
         private void RestoreThread()
         {
             var proc = new Process
@@ -55,16 +66,16 @@ namespace iSuite
 
         private async void restoreFirmwareButton_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Restoring your device will erase ALL information\nPlease ensure that you are signed out of iCloud/Find My is disabled\nContinue?", "WARNING!", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+            if (MessageBox.Show((string)MainWindow.languageTable["restoreAlert"], "", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
             if (firmwareListView.SelectedItem == null)
             {
-                restoreStatusListBox.Items.Add("Please select a firmware");
+                MessageBox.Show((string)MainWindow.languageTable["pleaseSelectFirmware"]);
                 return;
             }
             Firmware selectedFW = JsonConvert.DeserializeObject<Firmware>(((JObject)firmwareListView.SelectedItem).ToString());
             if (selectedFW.version.StartsWith("1.") || selectedFW.version.StartsWith("2."))
             {
-                MessageBox.Show("Restoring to iOS 1 and 2 is not supported.", "Error!");
+                MessageBox.Show((string)MainWindow.languageTable["iOS1_2NotSupported"]);
                 return;
             }
             if (!File.Exists($"{MainWindow.options.TempDataLocation}/{selectedFW.identifier}-{selectedFW.buildid}.ipsw"))

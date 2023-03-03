@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="684" d:DesignWidth="684">
     <Grid Background="#FFE5E5E5">
-        <GroupBox Header="Repos" Margin="10,10,444,10">
+        <GroupBox x:Name="reposGroupBox" Header="Repos" Margin="10,10,444,10">
             <Grid>
                 <Button x:Name="addRepoButton" Content="Add Repo" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="20" Click="addRepoButton_Click" Margin="5,0,5,30"/>
                 <TextBox x:Name="addRepoTextBox" HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="http://" VerticalAlignment="Bottom" Height="20" Margin="5,0,5,55"/>
@@ -17,7 +17,7 @@
         </GroupBox>
         <GroupBox x:Name="packagesLVGB" Header="Packages" Margin="245,10,10,10">
             <Grid>
-                <ListView x:Name="packagesListView" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="5,5,5,5" MouseDoubleClick="packagesListView_MouseDoubleClick">
+                <ListView x:Name="packagesListView" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="5,5,5,5" MouseDoubleClick="packagesListView_MouseDoubleClick" Foreground="Black">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn x:Name="packageNameColumn" Header="Package Name" DisplayMemberBinding="{Binding Name}"/>

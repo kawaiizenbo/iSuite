@@ -1,7 +1,4 @@
-﻿using ICSharpCode.SharpZipLib.BZip2;
-using ICSharpCode.SharpZipLib.GZip;
-
-using iMobileDevice;
+﻿using iMobileDevice;
 using iMobileDevice.Afc;
 using iMobileDevice.iDevice;
 using iMobileDevice.Lockdown;
@@ -15,12 +12,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace iSuite
 {
@@ -46,6 +45,8 @@ namespace iSuite
 
         public static OptionsJson options;
 
+        public static JObject languageTable = new JObject();
+
         public static Dictionary<string, string> deviceInfo = new Dictionary<string, string>();
         public static Dictionary<string, string> stDeviceInfo = new Dictionary<string, string>();
         
@@ -60,6 +61,7 @@ namespace iSuite
         public static ulong deviceDataCapacity = 0;
         public static ulong deviceDataAvailable = 0;
 
+        bool done = false;
         bool dragging = false;
         Point startPoint;
         System.Windows.Forms.Timer ProbeTimer = new System.Windows.Forms.Timer();
@@ -94,6 +96,8 @@ namespace iSuite
             }
             options = JsonConvert.DeserializeObject<OptionsJson>(File.ReadAllText(dataLocation + "/options.json"));
             usb.Source = Util.BitmapToImageSource(iSuite.Resources.usb);
+
+            
         }
 
         private void DeviceDetectorThread()
@@ -233,47 +237,87 @@ namespace iSuite
 
         private async Task Init()
         {
-            waitingForDeviceLabel.Content = "Device Found";
-            ensureTrustedLabel.Content = "Obtaining device data...";
+            waitingForDeviceLabel.Content = (string)languageTable["deviceFound"];
+            ensureTrustedLabel.Content = (string)languageTable["obtainingDeviceData"];
             if (normalConnected)
             {
                 // get device info
-                stDeviceInfo["Name"] = deviceInfo["Name"] = Util.GetLockdowndStringKey(lockdownHandle, null, "DeviceName");
-                deviceIdentifier = stDeviceInfo["Product Identifier"] = deviceInfo["Product Identifier"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductType");
-                stDeviceInfo["Model Number"] = deviceInfo["Model Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ModelNumber") + 
+                stDeviceInfo[(string)languageTable["name"]] = 
+                    deviceInfo[(string)languageTable["name"]] = 
+                    Util.GetLockdowndStringKey(lockdownHandle, null, "DeviceName");
+
+                deviceIdentifier = stDeviceInfo[(string)languageTable["productIdentifier"]] = 
+                    deviceInfo[(string)languageTable["productIdentifier"]] = 
+                    Util.GetLockdowndStringKey(lockdownHandle, null, "ProductType");
+
+                stDeviceInfo[(string)languageTable["modelNumber"]] = 
+                    deviceInfo[(string)languageTable["modelNumber"]] = 
+                    Util.GetLockdowndStringKey(lockdownHandle, null, "ModelNumber") + 
                     Util.GetLockdowndStringKey(lockdownHandle, null, "RegionInfo");
-                stDeviceInfo["Board Configuration"] = deviceInfo["Board Configuration"] = Util.GetLockdowndStringKey(lockdownHandle, null, "HardwareModel");
-                stDeviceInfo["Architecture"] = deviceInfo["Architecture"] = Util.GetLockdowndStringKey(lockdownHandle, null, "CPUArchitecture");
-                stDeviceInfo["iOS Version"] = deviceInfo["iOS Version"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ProductVersion");
-                stDeviceInfo["iOS Build"] = deviceInfo["iOS Build"] = Util.GetLockdowndStringKey(lockdownHandle, null, "BuildVersion");
+
+                stDeviceInfo[(string)languageTable["boardConfig"]] = 
+                    deviceInfo[(string)languageTable["boardConfig"]] = 
+                    Util.GetLockdowndStringKey(lockdownHandle, null, "HardwareModel");
+
+                stDeviceInfo[(string)languageTable["arch"]] = 
+                    deviceInfo[(string)languageTable["arch"]] = 
+                    Util.GetLockdowndStringKey(lockdownHandle, null, "CPUArchitecture");
+
+                stDeviceInfo[(string)languageTable["iOSVersion"]] = 
+                    deviceInfo[(string)languageTable["iOSVersion"]] = 
+                    Util.GetLockdowndStringKey(lockdownHandle, null, "ProductVersion");
+
+                stDeviceInfo[(string)languageTable["iOSBuild"]] = 
+                    deviceInfo[(string)languageTable["iOSBuild"]] = 
+                    Util.GetLockdowndStringKey(lockdownHandle, null, "BuildVersion");
+
                 try
                 {
-                    stDeviceInfo["Baseband Version"] = deviceInfo["Baseband Version"] = Util.GetLockdowndStringKey(lockdownHandle, null, "BasebandVersion");
+                    stDeviceInfo[(string)languageTable["bbVersion"]] = 
+                        deviceInfo[(string)languageTable["bbVersion"]] = 
+                        Util.GetLockdowndStringKey(lockdownHandle, null, "BasebandVersion");
                 }
                 catch(Exception) { }
-                deviceInfo["Serial Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "SerialNumber");
-                deviceUniqueChipID = Util.GetLockdowndUlongKey(lockdownHandle, null, "UniqueChipID");
-                deviceInfo["ECID"] = string.Format("{0:X}", deviceUniqueChipID);
+
+                deviceInfo[(string)languageTable["serial"]] = 
+                    Util.GetLockdowndStringKey(lockdownHandle, null, "SerialNumber");
+
+                deviceUniqueChipID = 
+                    Util.GetLockdowndUlongKey(lockdownHandle, null, "UniqueChipID");
+                deviceInfo[(string)languageTable["ecid"]] = 
+                    string.Format("{0:X}", deviceUniqueChipID);
                 try
                 {
                     if (Util.GetLockdowndStringKey(lockdownHandle, null, "InternationalMobileEquipmentIdentity") == null)
                     {
-                        deviceInfo["MEID"] = Util.GetLockdowndStringKey(lockdownHandle, null, "MobileEquipmentIdentifier");
+                        deviceInfo[(string)languageTable["meid"]] = 
+                            Util.GetLockdowndStringKey(lockdownHandle, null, "MobileEquipmentIdentifier");
                     }
                     else
                     {
-                        deviceInfo["IMEI"] = Util.GetLockdowndStringKey(lockdownHandle, null, "InternationalMobileEquipmentIdentity");
+                        deviceInfo[(string)languageTable["imei"]] = 
+                            Util.GetLockdowndStringKey(lockdownHandle, null, "InternationalMobileEquipmentIdentity");
                     }
-                    deviceInfo["Phone Number"] = Util.GetLockdowndStringKey(lockdownHandle, null, "PhoneNumber");
+                    deviceInfo[(string)languageTable["phoneNumber"]] = 
+                        Util.GetLockdowndStringKey(lockdownHandle, null, "PhoneNumber");
                 }
                 catch(Exception) { }
-                deviceInfo["UDID"] = deviceUDID;
-                deviceInfo["Wi-Fi MAC Address"] = Util.GetLockdowndStringKey(lockdownHandle, null, "WiFiAddress").ToUpper();
-                stDeviceInfo["Activation Status"] = deviceInfo["Activation Status"] = Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState");
+
+                deviceInfo[(string)languageTable["udid"]] = deviceUDID;
+
+                deviceInfo[(string)languageTable["macAddr"]] = 
+                    Util.GetLockdowndStringKey(lockdownHandle, null, "WiFiAddress").ToUpper();
+
+                stDeviceInfo[(string)languageTable["activation"]] = 
+                    deviceInfo[(string)languageTable["activation"]] = 
+                    Util.GetLockdowndStringKey(lockdownHandle, null, "ActivationState");
+
                 try
                 {
                     // ios 3 and lower doent have this
-                    stDeviceInfo["Display Resolution"] = deviceInfo["Display Resolution"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.iTunes", "ScreenWidth").ToString() + "x" +
+                    stDeviceInfo[(string)languageTable["resolution"]] = 
+                        deviceInfo[(string)languageTable["resolution"]] = 
+                        Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.iTunes", "ScreenWidth").ToString() + "x" +
                         Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.iTunes", "ScreenHeight").ToString();
                 }
                 catch(Exception) { }
@@ -284,10 +328,16 @@ namespace iSuite
                 deviceDataCapacity = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataCapacity");
                 deviceSystemAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalSystemAvailable");
                 deviceDataAvailable = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.disk_usage", "TotalDataAvailable");
-                stDeviceInfo["Disk Capacity"] = deviceInfo["Disk Capacity"] = Util.FormatBytes(deviceDiskCapacity);
+
+                stDeviceInfo[(string)languageTable["diskSize"]] = 
+                    deviceInfo[(string)languageTable["diskSize"]] = 
+                    Util.FormatBytes(deviceDiskCapacity);
 
                 // battery
-                stDeviceInfo["Current Charge"] = deviceInfo["Current Charge"] = Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.battery", "BatteryCurrentCapacity").ToString() + "%";
+                stDeviceInfo[(string)languageTable["battery"]] = 
+                    deviceInfo[(string)languageTable["battery"]] = 
+                    Util.GetLockdowndUlongKey(lockdownHandle, "com.apple.mobile.battery", "BatteryCurrentCapacity").ToString() + "%";
+
                 DeviceInfoPage.UpdateControls();
 
                 // get apps
@@ -372,7 +422,7 @@ namespace iSuite
 
         private void creditsButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("iSuite by KawaiiZenbo\nBased on LibiMobileDevice\nIPSW API by ipsw.me\nJailbreak API by littlebyte", "About iSuite");
+            MessageBox.Show("iSuite developed by KawaiiZenbo\nBased on LibiMobileDevice\n Jailbreak and IPSW API by LittleByte", "About iSuite");
         }
 
         private void saveSettingsButton_Click(object sender, RoutedEventArgs e)
@@ -428,9 +478,62 @@ namespace iSuite
                     break;
             }
         }
+
+        private void languageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            string langVal = languageComboBox.SelectedItem.ToString().Split('(')[1].TrimEnd(')');
+            string langJsonData = Encoding.UTF8.GetString((byte[])iSuite.Resources.ResourceManager.GetObject($"Locale_{langVal}"));
+            Debug.WriteLine(langJsonData);
+            languageTable = JObject.Parse(langJsonData);
+
+            // Load Locale to Controls
+            LoadLanguage();
+            DeviceInfoPage.LoadLanguage();
+            AppsPage.LoadLanguage();
+            AFCPage.LoadLanguage();
+            //JailbreakPage.LoadLanguage();
+            RestorePage.LoadLanguage();
+            PackageManagerPage.LoadLanguage();
+
+            if (done) MessageBox.Show((string)languageTable["restartApp"]);
+        }
         #endregion
 
         #region Window Functions
+        public void LoadLanguage()
+        {
+            // BAD BAD HORRIBLE ONLY WAY EDITOR IS USABLE
+            // Main Window
+            waitingForDeviceLabel.Content = languageTable["waitingForDevice"];
+            ensureTrustedLabel.Content = languageTable["ensureTrusted"];
+            continueWithoutDeviceButton.Content = languageTable["continueWithoutDevice"];
+            deviceInfoTab.Header = languageTable["deviceInfo"];
+            appsTab.Header = languageTable["apps"];
+            fileSystemTab.Header = languageTable["fileSystem"];
+            jailbreakTab.Header = languageTable["jailbreak"];
+            restoreTab.Header = languageTable["restore"];
+            packageManagerTab.Header = languageTable["packageManager"];
+            settingsTab.Header = languageTable["settings"];
+
+            // Settings Tab
+            displaySettingsGroupBox.Header = languageTable["display"];
+            languageSettingsLabel.Content = languageTable["language"];
+            colorSchemeSettingsLabel.Content = languageTable["colorScheme"];
+            darkModeCheckBox.Content = languageTable["darkMode"];
+            locationsSettingsGroupBox.Header = languageTable["locations"];
+            tempDataSettingsLabel.Content = languageTable["tempData"];
+            apiUrlSettingsLabel.Content = languageTable["apiURL"];
+            tempDataSettingsBrowseButton.Content = languageTable["browse"];
+            creditsButton.Content = languageTable["credits"];
+            saveSettingsButton.Content = languageTable["save"];
+            resetSettingsButton.Content = languageTable["reset"];
+
+            // Colours
+            for (int i = 0; i >= colorSchemeComboBox.Items.Count - 1; i++)
+            {
+                colorSchemeComboBox.Items[i] = languageTable[colorSchemeComboBox.Items[i].ToString().ToLower()];
+            }
+        }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             mainTabControl.Visibility = Visibility.Hidden;
@@ -441,6 +544,8 @@ namespace iSuite
             darkModeCheckBox.IsChecked = options.DarkMode;
             languageComboBox.SelectedIndex = options.Language;
             colorSchemeComboBox.SelectedIndex = options.ColorScheme;
+
+            done = true;
 
             // check for them until you dont need to check for them anymore
             await Task.Run(new Action(DeviceDetectorThread));

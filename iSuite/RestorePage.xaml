@@ -10,16 +10,16 @@
         <ListView x:Name="firmwareListView" Margin="10,10,315,48">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Version" Width="75" DisplayMemberBinding="{Binding version}"/>
-                    <GridViewColumn Header="Build ID" Width="75" DisplayMemberBinding="{Binding buildid}"/>
-                    <GridViewColumn Header="Signed" Width="50" DisplayMemberBinding="{Binding signed}"/>
-                    <GridViewColumn Header="Release Date" Width="150" DisplayMemberBinding="{Binding uploaddate}"/>
+                    <GridViewColumn x:Name="versionColumn" Header="Version" Width="75" DisplayMemberBinding="{Binding version}"/>
+                    <GridViewColumn x:Name="buildIDColumn" Header="Build ID" Width="75" DisplayMemberBinding="{Binding buildid}"/>
+                    <GridViewColumn x:Name="signedColumn" Header="Signed" Width="50" DisplayMemberBinding="{Binding signed}"/>
+                    <GridViewColumn x:Name="releaseDateColumn" Header="Release Date" Width="150" DisplayMemberBinding="{Binding uploaddate}"/>
                 </GridView>
             </ListView.View>
         </ListView>
         <Button x:Name="refreshFirmwareButton" Content="Refresh" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Height="33" Width="99" Click="refreshFirmwareButton_Click"/>
         <Button x:Name="restoreFirmwareButton" Content="Restore" HorizontalAlignment="Left" Margin="114,0,0,10" VerticalAlignment="Bottom" Height="33" Width="99" Click="restoreFirmwareButton_Click"/>
         <ListBox x:Name="restoreStatusListBox" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="374,10,0,10" HorizontalAlignment="Left" Width="300"/>
-        <Button Content="Check downloaded IPSWs" HorizontalAlignment="Left" Margin="218,0,0,10" VerticalAlignment="Bottom" Width="150" Height="33"/>
+        <Button x:Name="checkDownloadedButton" Content="Check downloaded IPSWs" HorizontalAlignment="Left" Margin="218,0,0,10" VerticalAlignment="Bottom" Width="150" Height="33"/>
     </Grid>
 </UserControl>

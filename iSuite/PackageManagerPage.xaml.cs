@@ -28,7 +28,19 @@ namespace iSuite
         {
             InitializeComponent();
         }
-        
+
+        public void LoadLanguage()
+        {
+            reposGroupBox.Content = (string)MainWindow.languageTable["repos"];
+            addRepoButton.Content = (string)MainWindow.languageTable["addRepo"];
+            removeSelectedRepoButton.Content = (string)MainWindow.languageTable["removeSelectedRepo"];
+            packagesLVGB.Header = (string)MainWindow.languageTable["packages"];
+            packageNameColumn.Header = (string)MainWindow.languageTable["packageName"];
+            packageIdColumn.Header = (string)MainWindow.languageTable["packageID"];
+            developerColumn.Header = (string)MainWindow.languageTable["developer"];
+            versionColumn.Header = (string)MainWindow.languageTable["version"];
+        }
+
         private void addRepoButton_Click(object sender, RoutedEventArgs e)
         {
             string repo = addRepoTextBox.Text;
@@ -42,7 +54,7 @@ namespace iSuite
             addRepoTextBox.Text = null;
         }
 
-        private void repoListBox_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void repoListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (repoListBox.SelectedItem.ToString() == null) return;
             string link = repoListBox.SelectedItem.ToString();

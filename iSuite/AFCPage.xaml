@@ -7,8 +7,8 @@
              mc:Ignorable="d" 
              d:DesignHeight="684" d:DesignWidth="684">
     <Grid Background="#FFE5E5E5">
-        <TextBox x:Name="afcPathTextBox" HorizontalAlignment="Left" Margin="65,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="574" Height="25"/>
-        <Button x:Name="afcGoButton" Content="Go" HorizontalAlignment="Left" Margin="644,10,0,0" VerticalAlignment="Top" Height="25" Width="30" Click="afcGoButton_Click"/>
+        <TextBox x:Name="afcPathTextBox" HorizontalAlignment="Center" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="554" Height="25"/>
+        <Button x:Name="afcGoButton" Content="Go" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Height="25" Width="50" Click="afcGoButton_Click"/>
         <Button x:Name="afcUploadFileButton" Content="Upload File" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top" Height="25" Width="100" Click="afcUploadFileButton_Click"/>
         <Button x:Name="afcRefreshButton" Content="Refresh" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="25" Width="50" Click="afcRefreshButton_Click"/>
         <Button x:Name="afcMKDirButton" Content="Make Directory" HorizontalAlignment="Left" Margin="325,40,0,0" VerticalAlignment="Top" Height="25" Width="100" Click="afcMKDirButton_Click"/>

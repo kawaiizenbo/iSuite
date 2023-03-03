@@ -7,23 +7,23 @@
              mc:Ignorable="d" 
              d:DesignHeight="684" d:DesignWidth="684">
     <Grid Background="#FFE5E5E5">
-        <GroupBox x:Name="deviceInfoGroupBox" Header="Loading...">
+        <GroupBox x:Name="mainGroupBox" Header="MarketingName">
             <Grid>
-                <GroupBox x:Name="deviceStorageGroupBox" Header="Device Storage (0B Total)" Margin="10,0,10,50" Height="84" VerticalAlignment="Bottom">
+                <GroupBox x:Name="deviceStorageGroupBox" Header="Device Storage" Margin="10,0,10,50" Height="84" VerticalAlignment="Bottom">
                     <Grid>
                         <Grid HorizontalAlignment="Left" Width="326">
-                            <Label x:Name="systemStorageLabel" Content="System (0B Total)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"/>
-                            <Label x:Name="systemStorageFreeLabel" Content="0B Free" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                            <Label x:Name="systemStorageLabel" Content="System" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"/>
+                            <Label x:Name="systemStorageFreeLabel" Content="Available" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Top"/>
                             <ProgressBar x:Name="systemStorageProgressBar" Margin="10,26,10,0" SmallChange="1" Foreground="{x:Static SystemParameters.WindowGlassBrush}" VerticalAlignment="Top" Height="25"/>
                         </Grid>
                         <Grid HorizontalAlignment="Right" Width="326">
-                            <Label x:Name="dataStorageLabel" Content="Data (0B Free)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"/>
-                            <Label x:Name="dataStorageFreeLabel" Content="0B Free" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                            <Label x:Name="dataStorageLabel" Content="Data" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"/>
+                            <Label x:Name="dataStorageFreeLabel" Content="Available" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Top"/>
                             <ProgressBar x:Name="dataStorageProgressBar" SmallChange="1" Foreground="{x:Static SystemParameters.WindowGlassBrush}" Margin="10,26,10,10" Height="25" VerticalAlignment="Top"/>
                         </Grid>
                     </Grid>
                 </GroupBox>
-                <GroupBox Header="Device Information" Margin="10,10,10,140">
+                <GroupBox x:Name="deviceInfoGroupBox" Header="Device Information" Margin="10,10,10,140">
                     <Grid>
                         <ListView x:Name="deviceInfoListView" HorizontalAlignment="Stretch" Margin="5,5,5,5" MouseDoubleClick="deviceInfoListView_MouseDoubleClick">
                             <ListView.Foreground>
@@ -31,8 +31,8 @@
                             </ListView.Foreground>
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header="Attribute" DisplayMemberBinding="{Binding Key}" Width="150"/>
-                                    <GridViewColumn Header="Value (Double-Click to copy)" DisplayMemberBinding="{Binding Value}" Width="400"/>
+                                    <GridViewColumn x:Name="attributeColumn" Header="Attribute" DisplayMemberBinding="{Binding Key}" Width="150"/>
+                                    <GridViewColumn x:Name="valueColumn" Header="Value (Double-Click to copy)" DisplayMemberBinding="{Binding Value}" Width="400"/>
                                 </GridView>
                             </ListView.View>
                         </ListView>

@@ -2,8 +2,9 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:isuite="clr-namespace:iSuite"
-    x:Name="window"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:isuite="clr-namespace:iSuite"
+        x:Name="window"
         x:Class="iSuite.MainWindow"
         mc:Ignorable="d"
         Background="{x:Static SystemParameters.WindowGlassBrush}"
@@ -12,11 +13,11 @@
         <Grid Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" Margin="1,30,1,1">
             <Label x:Name="waitingForDeviceLabel" Content="Waiting for device..." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="36" Margin="0,0,0,100"/>
             <Label x:Name="ensureTrustedLabel" Content="Please ensure device is connected and trusted." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18"/>
-            <Button x:Name="continueWithoutDeviceButton" Content="Continue Without Device" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="150" Height="20" Click="continueWithoutDeviceButton_Click" Margin="10,0,0,10"/>
+            <Button x:Name="continueWithoutDeviceButton" Content="Continue without device" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="150" Height="20" Click="continueWithoutDeviceButton_Click" Margin="10,0,0,10"/>
             <Image x:Name="usb" Width="300" Height="300" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"/>
         </Grid>
         <TabControl x:Name="mainTabControl" Height="700" VerticalAlignment="Bottom" Margin="1,0,1,1">
-            <TabItem x:Name="deviceInfoTab" Header="Device Info" Width="90">
+            <TabItem x:Name="deviceInfoTab" Header="DeviceInfo" Width="90">
                 <isuite:DeviceInfoPage x:Name="DeviceInfoPage"/>
             </TabItem>
             <TabItem x:Name="appsTab" Header="Apps" Width="90">
@@ -34,15 +35,16 @@
             <TabItem x:Name="packageManagerTab" Header="Package Manager" Width="110">
                 <isuite:PackageManagerPage x:Name="PackageManagerPage"/>
             </TabItem>
-            <TabItem x:Name="settingsTab" HorizontalAlignment="Center" Height="20" Header="Options" VerticalAlignment="Center" Width="90">
+            <TabItem x:Name="settingsTab" HorizontalAlignment="Center" Height="20" Header="Settings" VerticalAlignment="Center" Width="90">
                 <Grid Background="#FFE5E5E5">
-                    <GroupBox Header="Display" Margin="10,10,10,10" VerticalAlignment="Top" Height="120">
+                    <GroupBox x:Name="displaySettingsGroupBox" Header="Display" Margin="10,10,10,10" VerticalAlignment="Top" Height="120">
                         <Grid>
-                            <Label Content="Language" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-                            <ComboBox x:Name="languageComboBox" HorizontalAlignment="Left" Margin="125,14,0,0" VerticalAlignment="Top" Width="200" IsReadOnly="True">
-                                <ComboBoxItem Content="English"/>
+                            <Label x:Name="languageSettingsLabel" Content="Language" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                            <ComboBox x:Name="languageComboBox" HorizontalAlignment="Left" Margin="125,14,0,0" VerticalAlignment="Top" Width="200" IsReadOnly="True" SelectionChanged="languageComboBox_SelectionChanged">
+                                <ComboBoxItem Content="English (eng)"/>
+                                <ComboBoxItem Content="toki pona (tok)"/>
                             </ComboBox>
-                            <Label Content="Color Scheme" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
+                            <Label x:Name="colorSchemeSettingsLabel" Content="Color Scheme" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
                             <ComboBox x:Name="colorSchemeComboBox" HorizontalAlignment="Left" Margin="125,43,0,0" VerticalAlignment="Top" Width="200" SelectionChanged="colorSchemeComboBox_SelectionChanged">
                                 <ComboBoxItem Content="Sync"/>
                                 <ComboBoxItem Content="Blue"/>
@@ -54,13 +56,13 @@
                             <CheckBox x:Name="darkModeCheckBox" Content="Dark Mode" HorizontalAlignment="Left" Margin="10,72,0,0" VerticalAlignment="Top" Checked="darkModeCheckBox_Checked"/>
                         </Grid>
                     </GroupBox>
-                    <GroupBox Header="Locations" Margin="10,135,10,0" VerticalAlignment="Top" Height="100">
+                    <GroupBox x:Name="locationsSettingsGroupBox" Header="Locations" Margin="10,135,10,0" VerticalAlignment="Top" Height="100">
                         <Grid>
-                            <Label Content="Temp Data" HorizontalAlignment="Left" Margin="10,14,0,0" VerticalAlignment="Top"/>
-                            <Label Content="API URL" HorizontalAlignment="Left" Margin="10,37,0,0" VerticalAlignment="Top"/>
+                            <Label x:Name="tempDataSettingsLabel" Content="Temp Data" HorizontalAlignment="Left" Margin="10,14,0,0" VerticalAlignment="Top"/>
+                            <Label x:Name="apiUrlSettingsLabel" Content="API URL" HorizontalAlignment="Left" Margin="10,37,0,0" VerticalAlignment="Top"/>
                             <TextBox x:Name="tempDataLocTextBox" HorizontalAlignment="Left" Margin="125,18,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="300"/>
                             <TextBox x:Name="ApiTextBox" HorizontalAlignment="Left" Margin="125,41,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="300"/>
-                            <Button Content="Browse" HorizontalAlignment="Left" Margin="430,17,0,0" VerticalAlignment="Top" Width="50"/>
+                            <Button x:Name="tempDataSettingsBrowseButton" Content="Browse" HorizontalAlignment="Left" Margin="430,17,0,0" VerticalAlignment="Top" Width="50"/>
                         </Grid>
                     </GroupBox>
                     <Button x:Name="creditsButton" Content="Credits" HorizontalAlignment="Left" Margin="10,637,0,0" VerticalAlignment="Top" Width="75" Height="25" Click="creditsButton_Click"/>

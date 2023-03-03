@@ -18,9 +18,9 @@
         <ListView x:Name="installedAppsListView" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,10,10,0" VerticalAlignment="Top" Height="379" Foreground="Black">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="App Name" DisplayMemberBinding="{Binding CFBundleDisplayName}"/>
-                    <GridViewColumn Header="Version" DisplayMemberBinding="{Binding CFBundleVersion}"/>
-                    <GridViewColumn Header="Bundle ID" DisplayMemberBinding="{Binding CFBundleIdentifier}"/>
+                    <GridViewColumn x:Name="appNameColumn" Header="App Name" DisplayMemberBinding="{Binding CFBundleDisplayName}"/>
+                    <GridViewColumn x:Name="versionColumn" Header="Version" DisplayMemberBinding="{Binding CFBundleVersion}"/>
+                    <GridViewColumn x:Name="bundleIDColumn" Header="Bundle ID" DisplayMemberBinding="{Binding CFBundleIdentifier}"/>
                 </GridView>
             </ListView.View>
         </ListView>

@@ -27,36 +27,46 @@ namespace iSuite
             InitializeComponent();
         }
 
+        public void LoadLanguage()
+        {
+            deviceInfoGroupBox.Header = (string)MainWindow.languageTable["deviceInformation"];
+            deviceStorageGroupBox.Header = (string)MainWindow.languageTable["deviceStorage"];
+            powerOffDeviceButton.Content = (string)MainWindow.languageTable["powerOff"];
+            rebootDeviceButton.Content = (string)MainWindow.languageTable["reboot"];
+            recoveryModeToggleButton.Content = (string)MainWindow.languageTable["enterRecovery"];
+            sensitiveInfoToggleButton.Content = (string)MainWindow.languageTable["hideSensitiveInfo"];
+            openiDeviceLogButton.Content = (string)MainWindow.languageTable["openSyslog"];
+            attributeColumn.Header = (string)MainWindow.languageTable["attribute"];
+            valueColumn.Header = (string)MainWindow.languageTable["value"];
+        }
+
         public void UpdateControls()
         {
             try 
             { 
-                deviceInfoGroupBox.Header = Util.GetLockdowndStringKey(MainWindow.lockdownHandle, null, "MarketingName"); 
+                mainGroupBox.Header = Util.GetLockdowndStringKey(MainWindow.lockdownHandle, null, "MarketingName"); 
             }
             catch 
             { 
                 try 
                 { 
                     WebClient wc = new WebClient();
-                    deviceInfoGroupBox.Header = JObject.Parse(wc.DownloadString(
+                    mainGroupBox.Header = JObject.Parse(wc.DownloadString(
                         new Uri($"{MainWindow.options.APISource}/device/{MainWindow.deviceIdentifier}.json")
                     ))["name"];
                     wc.Dispose();
                 }
                 catch
                 {
-                    deviceInfoGroupBox.Header = MainWindow.deviceIdentifier;
+                    mainGroupBox.Header = MainWindow.deviceIdentifier;
                 }
             }
-            
 
-            deviceStorageGroupBox.Header = $"Device Storage ({Util.FormatBytes(MainWindow.deviceDiskCapacity)} Total)";
+            systemStorageLabel.Content = $"{(string)MainWindow.languageTable["system"]} ({Util.FormatBytes(MainWindow.deviceSystemCapacity)} {(string)MainWindow.languageTable["total"]})";
+            dataStorageLabel.Content = $"{(string)MainWindow.languageTable["data"]} ({Util.FormatBytes(MainWindow.deviceDataCapacity)} {(string)MainWindow.languageTable["total"]})";
 
-            systemStorageLabel.Content = $"System ({Util.FormatBytes(MainWindow.deviceSystemCapacity)} Total)";
-            dataStorageLabel.Content = $"Data ({Util.FormatBytes(MainWindow.deviceDataCapacity)} Total)";
-
-            systemStorageFreeLabel.Content = $"{Util.FormatBytes(MainWindow.deviceSystemAvailable)} Free";
-            dataStorageFreeLabel.Content = $"{Util.FormatBytes(MainWindow.deviceDataAvailable)} Free";
+            systemStorageFreeLabel.Content = $"{(string)MainWindow.languageTable["available"]} ({Util.FormatBytes(MainWindow.deviceSystemAvailable)})";
+            dataStorageFreeLabel.Content = $"{(string)MainWindow.languageTable["available"]} ({Util.FormatBytes(MainWindow.deviceDataAvailable)})";
 
             systemStorageProgressBar.Maximum = (int)(MainWindow.deviceSystemCapacity / 10000000);
             dataStorageProgressBar.Maximum = (int)(MainWindow.deviceDataCapacity / 10000000);
@@ -69,15 +79,15 @@ namespace iSuite
 
         public void SetRecovery()
         {
-            deviceInfoGroupBox.Header = "Recovery Mode";
-            recoveryModeToggleButton.Content = "Exit Recovery";
+            mainGroupBox.Header = (string)MainWindow.languageTable["recoveryMode"];
+            recoveryModeToggleButton.Content = (string)MainWindow.languageTable["exitRecovery"];
             powerOffDeviceButton.IsEnabled = false;
             rebootDeviceButton.IsEnabled = false;
         }
 
         public void SetDFU()
         {
-            deviceInfoGroupBox.Header = "DFU Mode";
+            mainGroupBox.Header = (string)MainWindow.languageTable["dfuMode"];
             recoveryModeToggleButton.Content = "-------";
             recoveryModeToggleButton.IsEnabled = false;
             powerOffDeviceButton.IsEnabled = false;
@@ -138,13 +148,13 @@ namespace iSuite
             {
                 deviceInfoListView.ItemsSource = MainWindow.stDeviceInfo;
                 sensitiveInfoShown = false;
-                sensitiveInfoToggleButton.Content = "Show sensitive info";
+                sensitiveInfoToggleButton.Content = (string)MainWindow.languageTable["showSensitiveInfo"];
             }
             else
             {
                 deviceInfoListView.ItemsSource = MainWindow.deviceInfo;
                 sensitiveInfoShown = true;
-                sensitiveInfoToggleButton.Content = "Hide sensitive info";
+                sensitiveInfoToggleButton.Content = (string)MainWindow.languageTable["hideSensitiveInfo"];
             }
         }
 

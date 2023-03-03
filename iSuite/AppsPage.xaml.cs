@@ -29,6 +29,16 @@ namespace iSuite
             InitializeComponent();
         }
 
+        public void LoadLanguage()
+        {
+            installNewAppButton.Content = MainWindow.languageTable["installNewApp"];
+            refreshAppListButton.Content = MainWindow.languageTable["refresh"];
+            removeSelectedAppButton.Content = MainWindow.languageTable["removeSelected"];
+            appNameColumn.Header = MainWindow.languageTable["appName"];
+            versionColumn.Header = MainWindow.languageTable["version"];
+            bundleIDColumn.Header = MainWindow.languageTable["bundleID"];
+        }
+
         private void refreshAppListButton_Click(object sender, RoutedEventArgs e)
         {
             Task.Run(new Action(GetAppsThread));

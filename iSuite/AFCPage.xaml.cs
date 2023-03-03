@@ -20,6 +20,17 @@ namespace iSuite
             InitializeComponent();
         }
 
+        public void LoadLanguage()
+        {
+            afcGoButton.Content = MainWindow.languageTable["go"];
+            afcRefreshButton.Content = MainWindow.languageTable["refresh"];
+            afcUploadFileButton.Content = MainWindow.languageTable["uploadFile"];
+            afcMKDirButton.Content = MainWindow.languageTable["mkdir"];
+            afcDownloadFileButton.Content = MainWindow.languageTable["downloadFile"];
+            afcDeleteSelectedButton.Content = MainWindow.languageTable["deleteSelected"];
+            afcConnectAfc2Button.Content = MainWindow.languageTable["connectAFC2"];
+        }
+
         public void Init()
         {
             afcPathTextBox.Text = afcPath;
@@ -109,8 +120,8 @@ namespace iSuite
         private void afcMKDirButton_Click(object sender, RoutedEventArgs e)
         {
             GenericSingleInputForm f = new GenericSingleInputForm();
-            f.Title = "Make Directory";
-            f.LabelText = "Please enter the name for the new directory.";
+            f.Title = (string)MainWindow.languageTable["makeDirectory"];
+            f.LabelText = (string)MainWindow.languageTable["enterNewDirectoryName"];
             f.ShowDialog();
             MainWindow.afc.afc_make_directory(MainWindow.afcHandle, afcPath + "/" + f.TextBoxContents);
             afcRefreshButton_Click(sender, e);
@@ -129,7 +140,7 @@ namespace iSuite
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Could not connect to afc2");
+                MessageBox.Show(ex.Message, (string)MainWindow.languageTable["afc2ConnectFailed"]);
             }
         }
 
@@ -142,7 +153,7 @@ namespace iSuite
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Could not delete object");
+                MessageBox.Show(ex.Message, (string)MainWindow.languageTable["failedToDelete"]);
             }
         }
 
